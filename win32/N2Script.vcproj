@@ -171,6 +171,22 @@
 				Name="src"
 				>
 				<File
+					RelativePath="..\src\ast.c"
+					>
+				</File>
+				<File
+					RelativePath="..\src\eval.c"
+					>
+				</File>
+				<File
+					RelativePath="..\src\grammar.c"
+					>
+				</File>
+				<File
+					RelativePath="..\src\lex.c"
+					>
+				</File>
+				<File
 					RelativePath="..\src\main.c"
 					>
 				</File>
@@ -181,10 +197,38 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath="..\src\types.h"
+			<Filter
+				Name="src"
 				>
-			</File>
+				<File
+					RelativePath="..\src\ast.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\eval.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\expression.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\grammar.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\statement.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\types.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\variable.c"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"

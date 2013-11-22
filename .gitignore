@@ -7,6 +7,7 @@
 *.o
 *.so
 src/.deps/*
+bin/*
 *.sln
 *.suo
 *.ncb
@@ -15,6 +16,11 @@ win32/bin/*
 win32/obj/*
 .cproject
 .project
+
+# bison & flex generated source #
+grammar.c
+grammar.h
+lex.c
 
 # Packages #
 ############

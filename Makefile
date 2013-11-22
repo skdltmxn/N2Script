@@ -10,7 +10,7 @@ else
 endif
 
 ifeq ($(BUILD), release)
-	CFLAGS += -O3 -s
+	CFLAGS += -O -s
 else
 	CFLAGS += -O0
 endif
@@ -19,7 +19,7 @@ CFLAGS += -x c
 
 export TARGET CC CFLAGS
 
-.PHONY: all src
+.PHONY: all src clean
 all: bin src
 	@echo "Build success"
 	
@@ -29,6 +29,6 @@ bin:
 src:
 	$(MAKE) -C ./$@
 
-clean: src
-	$(MAKE) -C ./$< clean
+clean:
+	$(MAKE) -C src clean
 	@rm -rf ./bin
