@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <locale.h>
 #include "types.h"
 #include "ast.h"
 #include "eval.h"
@@ -21,6 +22,7 @@ extern int yylex();
 
 int main(int argc, char **argv)
 {
+	setlocale(LC_ALL, "");
 	root = init_ast();
 	if (!root)
 	{

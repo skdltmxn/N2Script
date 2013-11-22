@@ -25,7 +25,7 @@ extern void destroy_ast(struct ast_tree *root);
 extern struct block *new_block();
 extern struct statement *new_statement(int (*execute)(struct statement *stmt),
 		void (*destroy)(struct statement *stmt));
-extern struct assign_stmt *new_assign_stmt(char *token, struct expression *expr);
+extern struct assign_stmt *new_assign_stmt(wchar_t *token, struct expression *expr);
 extern void destroy_assign_stmt(struct statement *stmt);
 extern void add_statement(struct block *blk, struct statement *stmt);
 extern struct expression *new_expression(const enum expr_type type, void *value);

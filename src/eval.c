@@ -109,6 +109,10 @@ int eval_assign(struct statement *stmt)
 	if (!eval_expression(assign->expr, &result))
 		return 0;
 
-	printf("%s <- %d\n", assign->ident, (int)result.value);
+	if (result.type == EXP_NUM)
+		printf("%ls <- %d\n", assign->ident, (int)result.value);
+	else if (result.type == EXP_STRING)
+		printf("%ls <- %ls\n", assign->ident, (wchar_t *)result.value);
+
 	return 1;
 }

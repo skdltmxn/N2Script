@@ -33,7 +33,8 @@ void destroy_expression(struct expression *expr)
 	destroy_expression(expr->right);
 
 	if (expr->type == EXP_STRING || expr->type == EXP_IDENT)
-		free(expr->value);
+		if (expr->value)
+			free(expr->value);
 
 	free(expr);
 }
@@ -98,7 +99,7 @@ struct statement *new_statement(int (*execute)(struct statement *stmt),
 	return stmt;
 }
 
-struct assign_stmt *new_assign_stmt(char *token, struct expression *expr)
+struct assign_stmt *new_assign_stmt(wchar_t *token, struct expression *expr)
 {
 	struct assign_stmt *stmt = NULL;
 
@@ -159,13 +160,38 @@ struct expression *new_operation(const enum expr_type type,
 
 	expr = (struct expression *)malloc(sizeof(*expr));
 
-	if (expr)
+	if (!expr)
+		return NULL;
+
+	/* evaluate as much as possible */
+
+
+	if (left->type == EXP_STRING && right->type == EXP_STRING)
+	{
+		/* STR + STR */
+		if (type == EXP_ADD)
+		{
+			expr->left = NULL;
+			expr->right = NULL;
+			expr->type = EXP_STRING;
+			expr->value = malloc((wcslen((wchar_t *)left->value)
+								+ wcslen((wchar_t *)right->value) + 1) * sizeof(wchar_t));
+
+			wcscpy((wchar_t *)expr->value, (const wchar_t *)left->value);
+			wcscat((wchar_t *)expr->value, (const wchar_t *)right->value);
+
+			destroy_expression(left);
+			destroy_expression(right);
+		}
+	}
+	else
 	{
 		expr->left = left;
 		expr->right = right;
 		expr->type = type;
 		expr->value = NULL;
 	}
+
 
 	return expr;
 }

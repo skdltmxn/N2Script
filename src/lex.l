@@ -17,12 +17,18 @@ extern int linenum;
 <COMMENT>.			;
 <COMMENT>\]\]\]		{ BEGIN(INITIAL); }
 <INITIAL>\"			{ BEGIN(STRING); }
-<STRING>(\\.|[^"])* { yylval.str = strdup(yytext); return STR; }
+<STRING>(\\.|[^"])* { yylval.str = (wchar_t *)malloc(strlen(yytext) * 2 + 2);
+					  mbstowcs(yylval.str, yytext, strlen(yytext) + 1);
+					  return STR; 
+					}
 <STRING>\"			{ BEGIN(INITIAL); }
 var					{ return VAR; }
 if					{ return IF; }
 [+\-*/=()]			{ return yytext[0]; }
 [0-9]+				{ yylval.token = atoi(yytext); return NUM; }
-[a-zA-Z_][a-zA-Z0-9]* { yylval.str = strdup(yytext); return IDENT; }
+[a-zA-Z_][a-zA-Z0-9]* { yylval.str = (wchar_t *)malloc(strlen(yytext) * 2 + 2); 
+						mbstowcs(yylval.str, yytext, strlen(yytext) + 1); 
+						return IDENT; 
+					}
 \n					{ ++linenum; }
 %%

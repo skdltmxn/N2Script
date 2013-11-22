@@ -22,7 +22,7 @@ void yyerror(struct ast_tree *root, const char *s);
 	struct statement *stmt;
 	struct expression *expr;
 	int token;
-	char *str;
+	wchar_t *str;
 }
 
 %token <token> NUM
