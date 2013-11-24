@@ -18,12 +18,16 @@ deps:
 	
 %.o: %.c Makefile
 	$(CC) $(CFLAGS) -MD -MF $(DEPFOLDER)/$*.d -c -o $@ $<
-	
-lex.c: lex.l
+
+lex.c: lex.l grammar.h
 	$(FLEX) -o $@ $<
+
+grammar.h: grammar.c
 
 grammar.c: grammar.y
 	$(BISON) -d -o $@ $<
+
+
 	
 	
 clean:
