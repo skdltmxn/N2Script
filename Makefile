@@ -1,11 +1,10 @@
-TARGET := x86
-MAKEFLAGS += -rR
+CC ?= gcc
+TARGET ?= $(shell uname -m | sed -e s/i.86/x86/ -e s/x86_64/x64/)
+MAKEFLAGS += -rR --no-print-directory
 
 ifeq ($(TARGET), x86)
-	CC := gcc
 	CFLAGS := -Dx86
 else
-	CC := x86_64-elf-gcc
 	CFLAGS := -Dx64
 endif
 

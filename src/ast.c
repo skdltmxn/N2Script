@@ -1,16 +1,19 @@
 /*
- * ast.c
+ *  ast.c
  *
- *   Copyright (c) 2013 skdltmxn <supershop@naver.com>
+ *    Copyright (c) 2013 skdltmxn <supershop@naver.com>
  *
- * This file contains code for construction/destruction of the AST tree
+ *  This file contains code for construction/destruction of the AST tree
  *
  */
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "types.h"
 #include "ast.h"
+#include "eval.h"
+#include "util.h"
 
 struct ast_tree *init_ast()
 {
@@ -19,7 +22,10 @@ struct ast_tree *init_ast()
 	root = (struct ast_tree *)malloc(sizeof(*root));
 
 	if (root)
+	{
 		root->blk = NULL;
+		root->scanner = NULL;
+	}
 
 	return root;
 }
@@ -33,10 +39,10 @@ void destroy_expression(struct expression *expr)
 	destroy_expression(expr->right);
 
 	if (expr->type == EXP_STRING || expr->type == EXP_IDENT)
-		if (expr->value)
-			free(expr->value);
+		if (expr->value.string)
+			safe_free(expr->value.string);
 
-	free(expr);
+	safe_free(expr);
 }
 
 void destroy_statement(struct statement *stmt)
@@ -47,7 +53,7 @@ void destroy_statement(struct statement *stmt)
 	destroy_statement(stmt->next);
 
 	stmt->destroy(stmt);
-	free(stmt);
+	safe_free(stmt);
 }
 
 void destroy_block(struct block *blk)
@@ -57,7 +63,7 @@ void destroy_block(struct block *blk)
 
 	destroy_statement(blk->stmts);
 
-	free(blk);
+	safe_free(blk);
 }
 
 void destroy_ast(struct ast_tree *root)
@@ -67,7 +73,7 @@ void destroy_ast(struct ast_tree *root)
 
 	destroy_block(root->blk);
 
-	free(root);
+	safe_free(root);
 }
 
 struct block *new_block()
@@ -99,7 +105,7 @@ struct statement *new_statement(int (*execute)(struct statement *stmt),
 	return stmt;
 }
 
-struct assign_stmt *new_assign_stmt(wchar_t *token, struct expression *expr)
+struct assign_stmt *new_assign_stmt(char *token, struct expression *expr)
 {
 	struct assign_stmt *stmt = NULL;
 
@@ -120,8 +126,8 @@ struct assign_stmt *new_assign_stmt(wchar_t *token, struct expression *expr)
 void destroy_assign_stmt(struct statement *stmt)
 {
 	destroy_expression(stmt->assign->expr);
-	free(stmt->assign->ident);
-	free(stmt->assign);
+	safe_free(stmt->assign->ident);
+	safe_free(stmt->assign);
 }
 
 void add_statement(struct block *blk, struct statement *stmt)
@@ -136,7 +142,8 @@ void add_statement(struct block *blk, struct statement *stmt)
 	*iter = stmt;
 }
 
-struct expression *new_expression(const enum expr_type type, void *value)
+struct expression *new_expression(const enum expr_type type,
+		union exp_value *value)
 {
 	struct expression *expr = NULL;
 
@@ -147,7 +154,7 @@ struct expression *new_expression(const enum expr_type type, void *value)
 		expr->left = NULL;
 		expr->right = NULL;
 		expr->type = type;
-		expr->value = value;
+		memcpy(&expr->value, value, sizeof(*value));
 	}
 
 	return expr;
@@ -157,43 +164,77 @@ struct expression *new_operation(const enum expr_type type,
 		struct expression *left, struct expression *right)
 {
 	struct expression *expr = NULL;
+	int check = TYPE_CHECK_OK;
 
 	expr = (struct expression *)malloc(sizeof(*expr));
 
 	if (!expr)
 		return NULL;
 
-	/* evaluate as much as possible */
+	check = type_check(type, left, right);
 
-
-	if (left->type == EXP_STRING && right->type == EXP_STRING)
-	{
-		/* STR + STR */
-		if (type == EXP_ADD)
-		{
-			expr->left = NULL;
-			expr->right = NULL;
-			expr->type = EXP_STRING;
-			expr->value = malloc((wcslen((wchar_t *)left->value)
-								+ wcslen((wchar_t *)right->value) + 1) * sizeof(wchar_t));
-
-			wcscpy((wchar_t *)expr->value, (const wchar_t *)left->value);
-			wcscat((wchar_t *)expr->value, (const wchar_t *)right->value);
-
-			destroy_expression(left);
-			destroy_expression(right);
-		}
-	}
-	else
+	/* cannot evaluate for now */
+	if (check == TYPE_CHECK_PENDING)
 	{
 		expr->left = left;
 		expr->right = right;
 		expr->type = type;
-		expr->value = NULL;
+		return expr;
 	}
+	/* syntax error */
+	else if (check == TYPE_CHECK_ERROR)
+		parse_error(get_ast_root(), "type error");
 
+
+	/* evaluate as much as possible */
+	expr->left = NULL;
+	expr->right = NULL;
+
+	if (type == EXP_ADD)
+	{
+		if (add_expression(left, right, expr))
+		{
+			destroy_expression(left);
+			destroy_expression(right);
+			return expr;
+		}
+	}
+	else if (type == EXP_SUB)
+	{
+		if (sub_expression(left, right, expr))
+		{
+			destroy_expression(left);
+			destroy_expression(right);
+			return expr;
+		}
+	}
+	else if (type == EXP_MUL)
+	{
+		if (mul_expression(left, right, expr))
+		{
+			destroy_expression(left);
+			destroy_expression(right);
+			return expr;
+		}
+	}
+	else if (type == EXP_DIV)
+	{
+		if (div_expression(left, right, expr))
+		{
+			destroy_expression(left);
+			destroy_expression(right);
+			return expr;
+		}
+	}
 
 	return expr;
 }
 
-
+void parse_error(struct ast_tree *root, const char *msg)
+{
+	YYLTYPE *loc = yyget_lloc(root->scanner);
+	fprintf(stderr, "%s (line: %d, col: %d)", msg, loc->first_line, loc->first_column);
+	yylex_destroy(root->scanner);
+	destroy_all();
+	exit(-3);
+}

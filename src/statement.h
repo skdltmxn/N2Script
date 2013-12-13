@@ -1,7 +1,7 @@
 /*
- * statement.h
+ *  statement.h
  *
- *   Copyright (c) 2013 skdltmxn <supershop@naver.com>
+ *    Copyright (c) 2013 skdltmxn <supershop@naver.com>
  *
  */
 
@@ -12,7 +12,7 @@
 
 struct assign_stmt
 {
-	wchar_t *ident;
+	char *ident;
 	struct expression *expr;
 };
 

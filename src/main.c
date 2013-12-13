@@ -1,9 +1,9 @@
 /*
- * main.c
+ *  main.c
  *
- *   Copyright (c) 2013 skdltmxn <supershop@naver.com>
+ *    Copyright (c) 2013 skdltmxn <supershop@naver.com>
  *
- * This file contains the main and other initialization functions
+ *  This file contains the main and other initialization functions
  *
  */
 
@@ -16,13 +16,51 @@
 
 static struct ast_tree *root = NULL;
 
-int linenum = 1;
-extern int yyparse();
-extern int yylex();
+extern int yylex_init(yyscan_t scanner);
+extern int yyparse(struct ast_tree *root, yyscan_t scanner);
+extern int yylex_destroy(yyscan_t scanner);
+extern void destroy_string_buffer();
+
+struct ast_tree *get_ast_root()
+{
+	return root;
+}
+
+static int parse_script()
+{
+	yyscan_t scanner;
+
+	if (yylex_init(&scanner))
+		return 0;
+
+	root->scanner = scanner;
+	if (yyparse(root, scanner))
+        return 0;
+
+	destroy_string_buffer();
+	yylex_destroy(scanner);
+
+	return 1;
+}
+
+/*
+ * Release all resources
+ */
+void destroy_all()
+{
+	destroy_string_buffer();
+	destroy_ast(root);
+}
 
 int main(int argc, char **argv)
 {
+/* Default encoding is UTF-8 */	
+#ifdef _WIN32
+	SetConsoleOutputCP(CP_UTF8);
+#else
 	setlocale(LC_ALL, "");
+#endif
+
 	root = init_ast();
 	if (!root)
 	{
@@ -30,11 +68,11 @@ int main(int argc, char **argv)
 		exit(-1);
 	}
 
-	yyparse(root);
+	if (!parse_script())
+		return 1;
 
 	evaluate(root);
-
-	destroy_ast(root);
+	destroy_all();
 
 	return 0;
 }

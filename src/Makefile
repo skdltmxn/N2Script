@@ -26,9 +26,6 @@ grammar.h: grammar.c
 
 grammar.c: grammar.y
 	$(BISON) -d -o $@ $<
-
-
-	
 	
 clean:
 	@rm -rf ./$(DEPFOLDER)
