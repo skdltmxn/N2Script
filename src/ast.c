@@ -230,10 +230,11 @@ struct expression *new_operation(const enum expr_type type,
 	return expr;
 }
 
+extern YYLTYPE *yyget_lloc(yyscan_t);
 void parse_error(struct ast_tree *root, const char *msg)
 {
 	YYLTYPE *loc = yyget_lloc(root->scanner);
-	fprintf(stderr, "%s (line: %d, col: %d)", msg, loc->first_line, loc->first_column);
+	fprintf(stderr, "%s (line: %d, col: %d)", msg, loc->first_line, loc->last_column);
 	yylex_destroy(root->scanner);
 	destroy_all();
 	exit(-3);
