@@ -1,5 +1,5 @@
-OBJ := $(patsubst %.c, %.o, $(wildcard *.c))
-OBJ += lex.o grammar.o
+OBJ := lex.o grammar.o
+OBJ += $(patsubst %.c, %.o, $(wildcard *.c))
 BISON := bison
 FLEX := flex
 DEPFOLDER := .deps
