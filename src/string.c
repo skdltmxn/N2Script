@@ -14,7 +14,9 @@
 #include "util.h"
 
 /*
- * Creates an unicode string
+ * Creates a new string
+ *
+ * Callee is responsible for deleting new string
  */
 byte *create_string(byte *src)
 {
@@ -51,6 +53,11 @@ byte *string_copy(byte *dest, const byte *src, size_t len)
 	return strncpy(dest, src, len);
 }
 
+/*
+ * Concatenate two strings
+ *
+ * Callee is responsible for deleting new string
+ */
 byte *string_concat(byte *left, byte *right)
 {
 	byte *string = NULL;
@@ -70,7 +77,7 @@ byte *string_concat(byte *left, byte *right)
 }
 
 /*
- * [0-9a-zA-Z]{2} -> hex
+ * Convert hex string into byte
  */
 byte string_to_hex(const char *str)
 {
@@ -98,6 +105,9 @@ byte string_to_hex(const char *str)
 
 /*
  * Encode unicode as UTF-8
+ *
+ * Supported unicode is in range of 0x0000 ~ 0xffff
+ * except surrogate pairs (0xd800 ~ 0xdfff)
  */
 int encode_utf8(byte *utf8, ui16 unicode)
 {
