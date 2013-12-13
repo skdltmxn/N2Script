@@ -39,6 +39,45 @@ static ui32 _size = 0;
 <STRING>\n			lerror(yyscanner, "Unterminated string found");
 <STRING><<EOF>>		lerror(yyscanner, "Unterminated string found");
 <STRING>[^\\\n"]*	{ add_string_buffer(yytext, strlen(yytext)); }
+<STRING>\\[0-7]{3}	{
+						int ret = 0;
+						int octal = 0;
+						octal = (yytext[1] - '0') * 64 +
+								(yytext[2] - '0') * 8 +
+								(yytext[3] - '0');
+						
+						if (octal > 255)
+							lerror(yyscanner, "Too big octal character");
+						
+						ret = add_string_buffer_byte(octal);
+						if (!ret)
+							lerror(yyscanner, "Failed to parse string");
+					}
+<STRING>\\x[0-9a-fA-F]{2} {
+						int ret = 0;
+						byte hex = string_to_hex(&yytext[2]);
+						
+						ret = add_string_buffer_byte(hex);
+						if (!ret)
+							lerror(yyscanner, "Failed to parse string");
+					}
+<STRING>\\u[0-9a-fA-F]{4} {
+						int ret = 0;
+						char utf8[4];
+						ui16 unicode = 0;
+						int len = 0;
+						
+						unicode = (string_to_hex(&yytext[2]) << 8) |
+								string_to_hex(&yytext[4]);
+						
+						len = encode_utf8(utf8, unicode);
+						if (!len)
+							lerror(yyscanner, "Invalid unicode code points found");
+						
+						ret = add_string_buffer(utf8, len);
+						if (!ret)
+							lerror(yyscanner, "Failed to parse string");
+					}
 <STRING>\\.			{
 						int ret = 0;
 						switch (yytext[1])
@@ -57,6 +96,10 @@ static ui32 _size = 0;
 							
 						case '"':
 							ret = add_string_buffer_byte('"');
+							break;
+						
+						case '0':
+							ret = add_string_buffer_byte('\0');
 							break;
 												
 						default:

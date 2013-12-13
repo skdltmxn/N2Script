@@ -80,7 +80,7 @@ expr:
 			| expr '/' expr	{ $$ = new_operation(EXP_DIV, $1, $3); }
 			| '(' expr ')'	{ $$ = $2; }
 			| INTEGER		{ union exp_value v; v.integer = $1; $$ = new_expression(EXP_INTEGER, &v); }
-			| REAL			{ union exp_value v; v.real = $1; $$ = new_expression(EXP_FLOAT, &v); }
+			| REAL			{ union exp_value v; v.real = $1; $$ = new_expression(EXP_REAL, &v); }
 			| STR 			{ union exp_value v; v.string = $1; $$ = new_expression(EXP_STRING, &v); }
 			| IDENT 		{ union exp_value v; v.string = $1; $$ = new_expression(EXP_IDENT, &v); }
 			;

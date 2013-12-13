@@ -18,5 +18,7 @@ extern byte *create_string(byte *src);
 extern size_t string_length(byte *str);
 extern byte *string_copy(byte *dest, const byte *src, size_t len);
 extern byte *string_concat(byte *left, byte *right);
+extern byte string_to_hex(const char *str);
+extern int encode_utf8(byte *utf8, ui16 unicode);
 
 #endif

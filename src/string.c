@@ -68,3 +68,65 @@ byte *string_concat(byte *left, byte *right)
 
 	return string;
 }
+
+/*
+ * [0-9a-zA-Z]{2} -> hex
+ */
+byte string_to_hex(const char *str)
+{
+	byte hex = 0;
+
+	if (!str || !(str + 1))
+		return 0;
+
+	if (str[0] <= '9')
+		hex = (str[0] - '0') << 4;
+	else if (str[0] <= 'F')
+		hex = (str[0] - 'A' + 10) << 4;
+	else
+		hex = (str[0] - 'a' + 10) << 4;
+
+	if (str[1] <= '9')
+		hex |= (str[1] - '0');
+	else if (str[1] <= 'F')
+		hex |= (str[1] - 'A' + 10);
+	else
+		hex |= (str[1] - 'a' + 10);
+
+	return hex;
+}
+
+/*
+ * Encode unicode as UTF-8
+ */
+int encode_utf8(byte *utf8, ui16 unicode)
+{
+	/* cannot encode surrogate pairs */
+	if (unicode >= 0xd800 && unicode < 0xe000)
+		return 0;
+
+	/* ascii */
+	if (unicode < 0x80)
+	{
+		*utf8 = unicode & 0xff;
+		return 1;
+	}
+	/* 2-byte code */
+	else if (unicode < 0x800)
+	{
+		*utf8 = 0xc0 | ((unicode >> 6) & 0x1f);
+		*(utf8 + 1) = 0x80 | (unicode & 0x3f);
+		return 2;
+	}
+	/* 3-byte code */
+	else
+	{
+		*utf8 = 0xe0 | ((unicode >> 12) & 0x0f);
+		*(utf8 + 1) = 0x80 | ((unicode >> 6) & 0x3f);
+		*(utf8 + 2) = 0x80 | (unicode & 0x3f);
+		return 3;
+	}
+	
+	/* impossible */
+	return 0;
+}

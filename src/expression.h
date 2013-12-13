@@ -10,7 +10,7 @@
 
 enum expr_type
 {
-	EXP_FLOAT = 0,
+	EXP_REAL = 0,
 	EXP_INTEGER,
 	EXP_STRING,
 	EXP_IDENT,

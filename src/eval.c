@@ -15,7 +15,7 @@
 #include "util.h"
 
 #define TYPE_NUM(expr)	\
-	((expr)->type == EXP_INTEGER || (expr)->type == EXP_FLOAT)
+	((expr)->type == EXP_INTEGER || (expr)->type == EXP_REAL)
 
 int evaluate(struct ast_tree *root)
 {
@@ -57,16 +57,16 @@ int add_expression(struct expression *left,
 		return 1;
 	}
 	/* NUM + NUM */
-	else if ((left->type == EXP_INTEGER || left->type == EXP_FLOAT) &&
-			  (right->type == EXP_INTEGER || right->type == EXP_FLOAT))
+	else if ((left->type == EXP_INTEGER || left->type == EXP_REAL) &&
+			  (right->type == EXP_INTEGER || right->type == EXP_REAL))
 	{
 		/* FLOAT + ? = FLOAT */
-		if (left->type == EXP_FLOAT || right->type == EXP_FLOAT)
+		if (left->type == EXP_REAL || right->type == EXP_REAL)
 		{
-			result->type = EXP_FLOAT;
+			result->type = EXP_REAL;
 			result->value.real =
-				((left->type == EXP_FLOAT) ? left->value.real : left->value.integer) +
-				((right->type == EXP_FLOAT) ? right->value.real : right->value.integer);
+				((left->type == EXP_REAL) ? left->value.real : left->value.integer) +
+				((right->type == EXP_REAL) ? right->value.real : right->value.integer);
 
 			return 1;
 		}
@@ -86,16 +86,16 @@ int add_expression(struct expression *left,
 int sub_expression(struct expression *left,
 		struct expression *right, struct expression *result)
 {
-	if ((left->type == EXP_INTEGER || left->type == EXP_FLOAT) &&
-		(right->type == EXP_INTEGER || right->type == EXP_FLOAT))
+	if ((left->type == EXP_INTEGER || left->type == EXP_REAL) &&
+		(right->type == EXP_INTEGER || right->type == EXP_REAL))
 	{
 		/* FLOAT + ? = FLOAT */
-		if (left->type == EXP_FLOAT || right->type == EXP_FLOAT)
+		if (left->type == EXP_REAL || right->type == EXP_REAL)
 		{
-			result->type = EXP_FLOAT;
+			result->type = EXP_REAL;
 			result->value.real =
-				((left->type == EXP_FLOAT) ? left->value.real : left->value.integer) -
-				((right->type == EXP_FLOAT) ? right->value.real : right->value.integer);
+				((left->type == EXP_REAL) ? left->value.real : left->value.integer) -
+				((right->type == EXP_REAL) ? right->value.real : right->value.integer);
 
 			return 1;
 		}
@@ -138,16 +138,16 @@ int mul_expression(struct expression *left,
 		return 1;
 	}
 	/* NUM + NUM */
-	else if ((left->type == EXP_INTEGER || left->type == EXP_FLOAT) &&
-			  (right->type == EXP_INTEGER || right->type == EXP_FLOAT))
+	else if ((left->type == EXP_INTEGER || left->type == EXP_REAL) &&
+			  (right->type == EXP_INTEGER || right->type == EXP_REAL))
 	{
 		/* FLOAT + ? = FLOAT */
-		if (left->type == EXP_FLOAT || right->type == EXP_FLOAT)
+		if (left->type == EXP_REAL || right->type == EXP_REAL)
 		{
-			result->type = EXP_FLOAT;
+			result->type = EXP_REAL;
 			result->value.real =
-					((left->type == EXP_FLOAT) ? left->value.real : left->value.integer) *
-					((right->type == EXP_FLOAT) ? right->value.real : right->value.integer);
+					((left->type == EXP_REAL) ? left->value.real : left->value.integer) *
+					((right->type == EXP_REAL) ? right->value.real : right->value.integer);
 
 			return 1;
 		}
@@ -171,16 +171,16 @@ int div_expression(struct expression *left,
 	if (!left || !right || !result)
 			return 0;
 
-	if ((left->type == EXP_INTEGER || left->type == EXP_FLOAT) &&
-		(right->type == EXP_INTEGER || right->type == EXP_FLOAT))
+	if ((left->type == EXP_INTEGER || left->type == EXP_REAL) &&
+		(right->type == EXP_INTEGER || right->type == EXP_REAL))
 	{
 		/* FLOAT / ? = FLOAT */
-		if (left->type == EXP_FLOAT || right->type == EXP_FLOAT)
+		if (left->type == EXP_REAL || right->type == EXP_REAL)
 		{
-			result->type = EXP_FLOAT;
+			result->type = EXP_REAL;
 			result->value.real =
-				((left->type == EXP_FLOAT) ? left->value.real : left->value.integer) /
-				((right->type == EXP_FLOAT) ? right->value.real : right->value.integer);
+				((left->type == EXP_REAL) ? left->value.real : left->value.integer) /
+				((right->type == EXP_REAL) ? right->value.real : right->value.integer);
 
 			return 1;
 		}
@@ -242,7 +242,7 @@ int type_check(const enum expr_type type,
 	case EXP_MUL:
 		if (left->type == EXP_STRING && right->type != EXP_INTEGER)
 			return TYPE_CHECK_ERROR;
-		if (left->type == EXP_FLOAT && right->type == EXP_STRING)
+		if (left->type == EXP_REAL && right->type == EXP_STRING)
 			return TYPE_CHECK_ERROR;
 		break;
 
@@ -313,7 +313,7 @@ struct expression *eval_expression(struct expression *expr,
 		result->type = expr->type;
 		return expr;
 
-	case EXP_FLOAT:
+	case EXP_REAL:
 		result->value.real = expr->value.real;
 		result->type = expr->type;
 		return expr;
@@ -345,7 +345,7 @@ int eval_assign(struct statement *stmt)
 
 	if (result.type == EXP_INTEGER)
 		printf("%s <- %d\n", assign->ident, result.value.integer);
-	else if (result.type == EXP_FLOAT)
+	else if (result.type == EXP_REAL)
 		printf("%s <- %f\n", assign->ident, result.value.real);
 	else if (result.type == EXP_STRING)
 		printf("%s <- %s\n", assign->ident, result.value.string);
