@@ -44,7 +44,6 @@ typedef void* yyscan_t;
 %token <real> REAL
 %token <str> STR IDENT
 %token ASSIGN
-%token VAR
 %token IF
 
 %type <root> n2script
@@ -70,8 +69,8 @@ statement:
 			;
 			
 assignment:
-			VAR IDENT '=' expr	{ $$ = new_statement(eval_assign, destroy_assign_stmt); 
-								$$->assign = new_assign_stmt($2, $4); } 	
+			IDENT '=' expr	{ $$ = new_statement(eval_assign, destroy_assign_stmt); 
+								$$->assign = new_assign_stmt($1, $3); } 	
 			;
 			
 expr:
