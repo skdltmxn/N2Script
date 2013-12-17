@@ -24,6 +24,7 @@ struct ast_tree *init_ast()
 	if (root)
 	{
 		root->blk = NULL;
+		root->var_tbl = new_var_table(NULL);
 		root->scanner = NULL;
 	}
 
@@ -72,6 +73,7 @@ void destroy_ast(struct ast_tree *root)
 		return;
 
 	destroy_block(root->blk);
+	destroy_var_table(root->var_tbl);
 
 	safe_free(root);
 }
@@ -89,7 +91,7 @@ struct block *new_block()
 }
 
 struct statement *new_statement(int (*execute)(struct statement *stmt),
-		void (*destroy)(struct statement *stmt))
+								void (*destroy)(struct statement *stmt))
 {
 	struct statement *stmt = NULL;
 
@@ -143,7 +145,8 @@ void add_statement(struct block *blk, struct statement *stmt)
 }
 
 struct expression *new_expression(const enum expr_type type,
-		union exp_value *value)
+								  union exp_value *value,
+								  struct var_table *vtbl)
 {
 	struct expression *expr = NULL;
 
@@ -155,13 +158,15 @@ struct expression *new_expression(const enum expr_type type,
 		expr->right = NULL;
 		expr->type = type;
 		memcpy(&expr->value, value, sizeof(*value));
+		expr->vtbl = vtbl;
 	}
 
 	return expr;
 }
 
 struct expression *new_operation(const enum expr_type type,
-		struct expression *left, struct expression *right)
+								 struct expression *left,
+								 struct expression *right)
 {
 	struct expression *expr = NULL;
 	int check = TYPE_CHECK_OK;
@@ -179,16 +184,18 @@ struct expression *new_operation(const enum expr_type type,
 		expr->left = left;
 		expr->right = right;
 		expr->type = type;
+		expr->vtbl = left->vtbl;
 		return expr;
 	}
 	/* syntax error */
 	else if (check == TYPE_CHECK_ERROR)
-		parse_error(get_ast_root(), "type error");
+		parse_error(get_ast_root(), "Type error");
 
 
 	/* evaluate as much as possible */
 	expr->left = NULL;
 	expr->right = NULL;
+	expr->vtbl = left->vtbl;
 
 	if (type == EXP_ADD)
 	{
@@ -231,10 +238,13 @@ struct expression *new_operation(const enum expr_type type,
 }
 
 extern YYLTYPE *yyget_lloc(yyscan_t);
+extern int yylex_destroy(yyscan_t scanner);
 void parse_error(struct ast_tree *root, const char *msg)
 {
 	YYLTYPE *loc = yyget_lloc(root->scanner);
-	fprintf(stderr, "%s (line: %d, col: %d)", msg, loc->first_line, loc->last_column);
+	fprintf(stderr, "%s (line: %d, col: %d)", msg,
+		loc->first_line,
+		loc->last_column);
 	yylex_destroy(root->scanner);
 	destroy_all();
 	exit(-3);

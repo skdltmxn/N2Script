@@ -1,3 +1,12 @@
+/*
+ *  lex.l
+ *
+ *    Copyright (c) 2013 skdltmxn <supershop@naver.com>
+ *
+ *  This file defines rules for lexical analyzer
+ *
+ */
+ 
 %{
 #include "types.h"
 #include "ast.h"

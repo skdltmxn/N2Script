@@ -10,15 +10,18 @@
 
 #include "statement.h"
 #include "grammar.h" /* YYLTYPE */
+#include "variable.h"
 
 struct block
 {
 	struct statement *stmts;
+	struct var_table *var_tbl;
 };
 
 struct ast_tree
 {
 	struct block *blk;
+	struct var_table *var_tbl;
 	yyscan_t scanner;
 };
 
@@ -28,12 +31,16 @@ extern void destroy_ast(struct ast_tree *root);
 extern struct block *new_block();
 extern struct statement *new_statement(int (*execute)(struct statement *stmt),
 		void (*destroy)(struct statement *stmt));
-extern struct assign_stmt *new_assign_stmt(char *token, struct expression *expr);
+extern struct assign_stmt *new_assign_stmt(char *token,
+		struct expression *expr);
 extern void destroy_assign_stmt(struct statement *stmt);
 extern void add_statement(struct block *blk, struct statement *stmt);
-extern struct expression *new_expression(const enum expr_type type, union exp_value *value);
+extern struct expression *new_expression(const enum expr_type type,
+										 union exp_value *value,
+										 struct var_table *vtbl);
 extern struct expression *new_operation(const enum expr_type type,
-		struct expression *left, struct expression *right);
+										struct expression *left,
+										struct expression *right);
 extern void parse_error(struct ast_tree *root, const char *msg);
 
 #endif

@@ -36,6 +36,7 @@ struct expression
 	union exp_value value;
 	struct expression *left;
 	struct expression *right;
+	struct var_table *vtbl;
 };
 
 #endif

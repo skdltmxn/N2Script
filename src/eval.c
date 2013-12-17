@@ -8,7 +8,9 @@
  */
 
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
 #include "types.h"
 #include "ast.h"
 #include "eval.h"
@@ -42,7 +44,8 @@ int evaluate(struct ast_tree *root)
  * 2) string + string
  */
 int add_expression(struct expression *left,
-		struct expression *right, struct expression *result)
+				   struct expression *right,
+				   struct expression *result)
 {
 	if (!left || !right || !result)
 		return 0;
@@ -84,7 +87,8 @@ int add_expression(struct expression *left,
 }
 
 int sub_expression(struct expression *left,
-		struct expression *right, struct expression *result)
+				   struct expression *right,
+				   struct expression *result)
 {
 	if ((left->type == EXP_INTEGER || left->type == EXP_REAL) &&
 		(right->type == EXP_INTEGER || right->type == EXP_REAL))
@@ -113,7 +117,8 @@ int sub_expression(struct expression *left,
 }
 
 int mul_expression(struct expression *left,
-		struct expression *right, struct expression *result)
+				   struct expression *right,
+				   struct expression *result)
 {
 	if (!left || !right || !result)
 			return 0;
@@ -131,17 +136,18 @@ int mul_expression(struct expression *left,
 
 		result->type = EXP_STRING;
 		result->value.string = (char *)malloc((len * count + 1) * sizeof(char));
+		result->value.string[len * count] = '\0';
 
 		for (i = 0; i < count; ++i)
 			string_copy(result->value.string + (i * len), str, len);
 
 		return 1;
 	}
-	/* NUM + NUM */
+	/* NUM * NUM */
 	else if ((left->type == EXP_INTEGER || left->type == EXP_REAL) &&
 			  (right->type == EXP_INTEGER || right->type == EXP_REAL))
 	{
-		/* FLOAT + ? = FLOAT */
+		/* FLOAT * ? = FLOAT */
 		if (left->type == EXP_REAL || right->type == EXP_REAL)
 		{
 			result->type = EXP_REAL;
@@ -151,7 +157,7 @@ int mul_expression(struct expression *left,
 
 			return 1;
 		}
-		/* INT + INT = INT */
+		/* INT * INT = INT */
 		else
 		{
 			result->type = EXP_INTEGER;
@@ -166,7 +172,8 @@ int mul_expression(struct expression *left,
 }
 
 int div_expression(struct expression *left,
-		struct expression *right, struct expression *result)
+				   struct expression *right,
+				   struct expression *result)
 {
 	if (!left || !right || !result)
 			return 0;
@@ -204,12 +211,13 @@ int div_expression(struct expression *left,
  *   -1: error
  */
 int type_check(const enum expr_type type,
-		struct expression *left, struct expression *right)
+			   struct expression *left,
+			   struct expression *right)
 {
 	if (!left || !right)
 		return TYPE_CHECK_ERROR;
 
-	if (left->type == EXP_IDENT || right->type == EXP_IDENT)
+	if (left->type > EXP_STRING || right->type > EXP_STRING)
 		return TYPE_CHECK_PENDING;
 
 	/* check for primitive types */
@@ -254,10 +262,11 @@ int type_check(const enum expr_type type,
 }
 
 struct expression *eval_expression(struct expression *expr,
-		struct expression *result)
+								   struct expression *result)
 {
 	struct expression *left = NULL;
 	struct expression *right = NULL;
+	struct expression save;
 
 	if (!expr || !result)
 		return NULL;
@@ -266,47 +275,67 @@ struct expression *eval_expression(struct expression *expr,
 	{
 	case EXP_ADD:
 		left = eval_expression(expr->left, result);
+		memcpy(&save, left, sizeof(save));
 		right = eval_expression(expr->right, result);
 
-		if (left->type == right->type)
-		{
-			result->type = left->type;
-			result->value.integer = left->value.integer + right->value.integer;
-		}
-		return result;
+		if (!left || !right)
+			break;
+
+		if (type_check(expr->type, left, right) == TYPE_CHECK_ERROR)
+			break;
+
+		if (add_expression(&save, right, result))
+			return result;
+
+		break;
 
 	case EXP_SUB:
 		left = eval_expression(expr->left, result);
+		memcpy(&save, left, sizeof(save));
 		right = eval_expression(expr->right, result);
 
-		if (left->type == right->type)
-		{
-			result->type = left->type;
-			result->value.integer = left->value.integer - right->value.integer;
-		}
-		return result;
+		if (!left || !right)
+			break;
+
+		if (type_check(expr->type, left, right) == TYPE_CHECK_ERROR)
+			break;
+
+		if (sub_expression(&save, right, result))
+			return result;
+
+		break;
 
 	case EXP_MUL:
 		left = eval_expression(expr->left, result);
+		memcpy(&save, left, sizeof(save));
 		right = eval_expression(expr->right, result);
 
-		if (left->type == right->type)
-		{
-			result->type = left->type;
-			result->value.integer = left->value.integer * right->value.integer;
-		}
-		return result;
+		if (!left || !right)
+			break;
+
+		if (type_check(expr->type, left, right) == TYPE_CHECK_ERROR)
+			break;
+
+		if (mul_expression(&save, right, result))
+			return result;
+
+		break;
 
 	case EXP_DIV:
 		left = eval_expression(expr->left, result);
+		memcpy(&save, left, sizeof(save));
 		right = eval_expression(expr->right, result);
 
-		if (left->type == right->type)
-		{
-			result->type = left->type;
-			result->value.integer = left->value.integer / right->value.integer;
-		}
-		return result;
+		if (!left || !right)
+			break;
+
+		if (type_check(expr->type, left, right) == TYPE_CHECK_ERROR)
+			break;
+
+		if (div_expression(&save, right, result))
+			return result;
+
+		break;
 
 	case EXP_INTEGER:
 		result->value.integer = expr->value.integer;
@@ -324,11 +353,9 @@ struct expression *eval_expression(struct expression *expr,
 		return expr;
 
 	case EXP_IDENT:
-		resolve_var(result);
-		return result;
+		return resolve_var(expr);
 	}
 
-	/* impossible */
 	return NULL;
 }
 
@@ -343,6 +370,13 @@ int eval_assign(struct statement *stmt)
 	if (!eval_expression(assign->expr, &result))
 		return 0;
 
+	result.vtbl = assign->expr->vtbl;
+	if (!assign_var(assign->ident, &result))
+	{
+		eval_error("failed to assign %s %d\n", assign->ident, result.value.integer);
+		return 0;
+	}
+
 	if (result.type == EXP_INTEGER)
 		printf("%s <- %d\n", assign->ident, result.value.integer);
 	else if (result.type == EXP_REAL)
@@ -352,4 +386,16 @@ int eval_assign(struct statement *stmt)
 
 
 	return 1;
+}
+
+void eval_error(const char *s, ...)
+{
+	va_list ap;
+
+	va_start(ap, s);
+	vfprintf(stderr, s, ap);
+	va_end(ap);
+
+	destroy_all();
+	exit(-3);
 }

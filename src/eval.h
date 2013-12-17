@@ -24,6 +24,6 @@ extern int div_expression(struct expression *left,
 extern int eval_assign(struct statement *stmt);
 extern int type_check(const enum expr_type type,
 		struct expression *left, struct expression *right);
-extern int resolve_var(struct expression *expr);
+extern void eval_error(const char *s, ...);
 
 #endif

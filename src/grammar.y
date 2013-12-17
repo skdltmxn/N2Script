@@ -1,3 +1,12 @@
+/*
+ *  grammar.y
+ *
+ *    Copyright (c) 2013 skdltmxn <supershop@naver.com>
+ *
+ *  This file defines grammar for N2Script
+ *
+ */
+
 %{
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,11 +15,10 @@
 #include "eval.h"
 #include "grammar.h"
 
-
-extern int linenum;
 extern int yylex();
 
 void yyerror(YYLTYPE *locp, struct ast_tree *root, yyscan_t scanner, const char *s);
+static struct var_table *parent = NULL, *current = NULL;
 %}
 
 %code requires {
@@ -57,11 +65,12 @@ typedef void* yyscan_t;
 %%
 
 n2script:   /* empty */
-			| statements	{ root->blk = $1; }
+			| { current = root->var_tbl; } statements	{ root->blk = $2; }
 			;
 			
 statements:	statements statement	{ add_statement($1, $2); }
-			| statement		{ $$ = new_block(); add_statement($$, $1); }
+			| statement		{ $$ = new_block(); 
+							  add_statement($$, $1); }
 			;
 			
 statement:
@@ -70,7 +79,7 @@ statement:
 			
 assignment:
 			IDENT '=' expr	{ $$ = new_statement(eval_assign, destroy_assign_stmt); 
-								$$->assign = new_assign_stmt($1, $3); } 	
+							  $$->assign = new_assign_stmt($1, $3); } 	
 			;
 			
 expr:
@@ -79,10 +88,10 @@ expr:
 			| expr '*' expr	{ $$ = new_operation(EXP_MUL, $1, $3); }
 			| expr '/' expr	{ $$ = new_operation(EXP_DIV, $1, $3); }
 			| '(' expr ')'	{ $$ = $2; }
-			| INTEGER		{ union exp_value v; v.integer = $1; $$ = new_expression(EXP_INTEGER, &v); }
-			| REAL			{ union exp_value v; v.real = $1; $$ = new_expression(EXP_REAL, &v); }
-			| STR 			{ union exp_value v; v.string = $1; $$ = new_expression(EXP_STRING, &v); }
-			| IDENT 		{ union exp_value v; v.string = $1; $$ = new_expression(EXP_IDENT, &v); }
+			| INTEGER		{ union exp_value v; v.integer = $1; $$ = new_expression(EXP_INTEGER, &v, current); }
+			| REAL			{ union exp_value v; v.real = $1; $$ = new_expression(EXP_REAL, &v, current); }
+			| STR 			{ union exp_value v; v.string = $1; $$ = new_expression(EXP_STRING, &v, current); }
+			| IDENT 		{ union exp_value v; v.string = $1; $$ = new_expression(EXP_IDENT, &v, current); }
 			;
 
 %%
