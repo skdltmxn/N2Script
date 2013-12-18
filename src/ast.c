@@ -189,8 +189,7 @@ struct expression *new_operation(const enum expr_type type,
 	}
 	/* syntax error */
 	else if (check == TYPE_CHECK_ERROR)
-		parse_error(get_ast_root(), "Type error");
-
+		parse_error(get_ast_root(), "type mismatch");
 
 	/* evaluate as much as possible */
 	expr->left = NULL;
@@ -242,7 +241,7 @@ extern int yylex_destroy(yyscan_t scanner);
 void parse_error(struct ast_tree *root, const char *msg)
 {
 	YYLTYPE *loc = yyget_lloc(root->scanner);
-	fprintf(stderr, "%s (line: %d, col: %d)", msg,
+	fprintf(stderr, "Parse error: %s (line: %d, col: %d)", msg,
 		loc->first_line,
 		loc->last_column);
 	yylex_destroy(root->scanner);

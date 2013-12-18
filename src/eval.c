@@ -53,9 +53,9 @@ int add_expression(struct expression *left,
 	/* STR + STR */
 	if (left->type == EXP_STRING && right->type == EXP_STRING)
 	{
-		result->type = EXP_STRING;
 		result->value.string = 
 			string_concat(left->value.string, right->value.string);
+		result->type = EXP_STRING;
 
 		return 1;
 	}
@@ -66,18 +66,18 @@ int add_expression(struct expression *left,
 		/* FLOAT + ? = FLOAT */
 		if (left->type == EXP_REAL || right->type == EXP_REAL)
 		{
-			result->type = EXP_REAL;
 			result->value.real =
 				((left->type == EXP_REAL) ? left->value.real : left->value.integer) +
 				((right->type == EXP_REAL) ? right->value.real : right->value.integer);
+			result->type = EXP_REAL;
 
 			return 1;
 		}
 		/* INT + INT = INT */
 		else
 		{
-			result->type = EXP_INTEGER;
 			result->value.integer = left->value.integer + right->value.integer;
+			result->type = EXP_INTEGER;
 
 			return 1;
 		}
@@ -96,18 +96,18 @@ int sub_expression(struct expression *left,
 		/* FLOAT + ? = FLOAT */
 		if (left->type == EXP_REAL || right->type == EXP_REAL)
 		{
-			result->type = EXP_REAL;
 			result->value.real =
 				((left->type == EXP_REAL) ? left->value.real : left->value.integer) -
 				((right->type == EXP_REAL) ? right->value.real : right->value.integer);
+			result->type = EXP_REAL;
 
 			return 1;
 		}
 		/* INT + INT = INT */
 		else
 		{
-			result->type = EXP_INTEGER;
 			result->value.integer = left->value.integer - right->value.integer;
+			result->type = EXP_INTEGER;
 
 			return 1;
 		}
@@ -134,12 +134,13 @@ int mul_expression(struct expression *left,
 				left->value.string : right->value.string;
 		ui32 len = string_length(str);
 
-		result->type = EXP_STRING;
 		result->value.string = (char *)malloc((len * count + 1) * sizeof(char));
 		result->value.string[len * count] = '\0';
 
 		for (i = 0; i < count; ++i)
 			string_copy(result->value.string + (i * len), str, len);
+
+		result->type = EXP_STRING;
 
 		return 1;
 	}
@@ -150,19 +151,19 @@ int mul_expression(struct expression *left,
 		/* FLOAT * ? = FLOAT */
 		if (left->type == EXP_REAL || right->type == EXP_REAL)
 		{
-			result->type = EXP_REAL;
 			result->value.real =
 					((left->type == EXP_REAL) ? left->value.real : left->value.integer) *
 					((right->type == EXP_REAL) ? right->value.real : right->value.integer);
+			result->type = EXP_REAL;
 
 			return 1;
 		}
 		/* INT * INT = INT */
 		else
 		{
-			result->type = EXP_INTEGER;
 			result->value.integer =
 					left->value.integer * right->value.integer;
+			result->type = EXP_INTEGER;
 
 			return 1;
 		}
@@ -184,18 +185,18 @@ int div_expression(struct expression *left,
 		/* FLOAT / ? = FLOAT */
 		if (left->type == EXP_REAL || right->type == EXP_REAL)
 		{
-			result->type = EXP_REAL;
 			result->value.real =
 				((left->type == EXP_REAL) ? left->value.real : left->value.integer) /
 				((right->type == EXP_REAL) ? right->value.real : right->value.integer);
+			result->type = EXP_REAL;
 
 			return 1;
 		}
 		/* INT / INT = INT */
 		else
 		{
-			result->type = EXP_INTEGER;
 			result->value.integer = left->value.integer / right->value.integer;
+			result->type = EXP_INTEGER;
 
 			return 1;
 		}
@@ -373,7 +374,10 @@ int eval_assign(struct statement *stmt)
 	result.vtbl = assign->expr->vtbl;
 	if (!assign_var(assign->ident, &result))
 	{
-		eval_error("failed to assign %s %d\n", assign->ident, result.value.integer);
+		if (result.type == EXP_STRING)
+			safe_free(result.value.string);
+
+		eval_error("Fatal: failed to assign `%s`\n", assign->ident);
 		return 0;
 	}
 
