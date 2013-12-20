@@ -20,7 +20,7 @@
 #define TYPE_NUM(expr)	\
 	((expr)->type == EXP_INTEGER || (expr)->type == EXP_REAL)
 
-int evaluate(struct ast_tree *root)
+int evaluate(const struct ast_tree *root)
 {
 	struct statement *stmts;
 
@@ -44,8 +44,8 @@ int evaluate(struct ast_tree *root)
  * 1) number + number
  * 2) string + string
  */
-int add_expression(struct expression *left,
-				   struct expression *right,
+int add_expression(const struct expression *left,
+				   const struct expression *right,
 				   struct expression *result)
 {
 	if (!left || !right || !result)
@@ -93,8 +93,8 @@ int add_expression(struct expression *left,
 	return 0;
 }
 
-int sub_expression(struct expression *left,
-				   struct expression *right,
+int sub_expression(const struct expression *left,
+				   const struct expression *right,
 				   struct expression *result)
 {
 	if ((left->type == EXP_INTEGER || left->type == EXP_REAL) &&
@@ -123,8 +123,8 @@ int sub_expression(struct expression *left,
 	return 0;
 }
 
-int mul_expression(struct expression *left,
-				   struct expression *right,
+int mul_expression(const struct expression *left,
+				   const struct expression *right,
 				   struct expression *result)
 {
 	if (!left || !right || !result)
@@ -176,8 +176,8 @@ int mul_expression(struct expression *left,
 	return 0;
 }
 
-int div_expression(struct expression *left,
-				   struct expression *right,
+int div_expression(const struct expression *left,
+				   const struct expression *right,
 				   struct expression *result)
 {
 	if (!left || !right || !result)
@@ -216,8 +216,8 @@ int div_expression(struct expression *left,
  *   -1: error
  */
 int type_check(const enum expr_type type,
-			   struct expression *left,
-			   struct expression *right)
+			   const struct expression *left,
+			   const struct expression *right)
 {
 	if (!left || !right)
 		return TYPE_CHECK_ERROR;
@@ -266,8 +266,8 @@ int type_check(const enum expr_type type,
 	return TYPE_CHECK_OK;
 }
 
-struct expression *eval_expression(struct expression *expr,
-								   struct expression *result)
+static struct expression *eval_expression(struct expression *expr,
+										  struct expression *result)
 {
 	struct expression *left = NULL;
 	struct expression *right = NULL;
@@ -364,7 +364,7 @@ struct expression *eval_expression(struct expression *expr,
 	return NULL;
 }
 
-int eval_assign(struct statement *stmt)
+int eval_assign(const struct statement *stmt)
 {
 	struct assign_stmt *assign = stmt->assign;
 	struct expression result;

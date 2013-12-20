@@ -79,7 +79,7 @@ void destroy_var_table(struct var_table *tbl)
 	safe_free(tbl);
 }
 
-struct expression *resolve_var(struct expression *expr)
+struct expression *resolve_var(const struct expression *expr)
 {
 	struct var_table *tbl = NULL;
 	struct var_entry *entry = NULL;
@@ -112,7 +112,7 @@ struct expression *resolve_var(struct expression *expr)
 	return &entry->expr;
 }
 
-int assign_var(const char *ident, struct expression *expr)
+int assign_var(const char *ident, const struct expression *expr)
 {
 	struct var_table *tbl = NULL;
 	struct var_entry *entry = NULL;

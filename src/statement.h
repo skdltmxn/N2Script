@@ -21,7 +21,7 @@ struct statement
 	struct statement *next;
 
 	struct assign_stmt *assign;
-	int (*execute)(struct statement *stmt);
+	int (*execute)(const struct statement *stmt);
 	void (*destroy)(struct statement *stmt);
 };
 

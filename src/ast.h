@@ -29,7 +29,7 @@ extern struct ast_tree *get_ast_root();
 extern struct ast_tree *init_ast();
 extern void destroy_ast(struct ast_tree *root);
 extern struct block *new_block();
-extern struct statement *new_statement(int (*execute)(struct statement *stmt),
+extern struct statement *new_statement(int (*execute)(const struct statement *stmt),
 									   void (*destroy)(struct statement *stmt));
 extern struct assign_stmt *new_assign_stmt(const char *token,
 										   struct expression *expr);

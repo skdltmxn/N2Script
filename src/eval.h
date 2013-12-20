@@ -12,18 +12,23 @@
 #define TYPE_CHECK_PENDING	0
 #define TYPE_CHECK_ERROR	(-1)
 
-extern int evaluate(struct ast_tree *root);
-extern int add_expression(struct expression *left,
-				struct expression *right, struct expression *result);
-extern int sub_expression(struct expression *left,
-				struct expression *right, struct expression *result);
-extern int mul_expression(struct expression *left,
-				struct expression *right, struct expression *result);
-extern int div_expression(struct expression *left,
-				struct expression *right, struct expression *result);
-extern int eval_assign(struct statement *stmt);
+extern int evaluate(const struct ast_tree *root);
+extern int add_expression(const struct expression *left,
+						  const struct expression *right,
+						  struct expression *result);
+extern int sub_expression(const struct expression *left,
+						  const struct expression *right,
+						  struct expression *result);
+extern int mul_expression(const struct expression *left,
+						  const struct expression *right,
+						  struct expression *result);
+extern int div_expression(const struct expression *left,
+						  const struct expression *right,
+						  struct expression *result);
+extern int eval_assign(const struct statement *stmt);
 extern int type_check(const enum expr_type type,
-		struct expression *left, struct expression *right);
+					  const struct expression *left,
+					  const struct expression *right);
 extern void eval_error(const char *s, ...);
 
 #endif

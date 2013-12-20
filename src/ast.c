@@ -86,7 +86,7 @@ struct block *new_block()
 	return blk;
 }
 
-struct statement *new_statement(int (*execute)(struct statement *stmt),
+struct statement *new_statement(int (*execute)(const struct statement *stmt),
 								void (*destroy)(struct statement *stmt))
 {
 	struct statement *stmt = NULL;

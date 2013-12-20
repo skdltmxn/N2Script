@@ -77,7 +77,7 @@ byte *string_concat(const byte *left, const byte *right)
 	return string;
 }
 
-byte *string_repeat(const byte *str, size_t count)
+byte *string_repeat(const byte *str, const size_t count)
 {
 	byte *string = NULL;
 	size_t len = string_length(str);
@@ -128,7 +128,7 @@ byte string_to_hex(const char *str)
  * Supported code points are in range of 0x0000 ~ 0xffff
  * except surrogate pairs (0xd800 ~ 0xdfff)
  */
-int encode_utf8(byte *utf8, ui16 unicode)
+int encode_utf8(byte *utf8, const ui16 unicode)
 {
 	/* cannot encode surrogate pairs */
 	if (unicode >= 0xd800 && unicode < 0xe000)

@@ -25,7 +25,7 @@ struct var_table
 
 extern struct var_table *new_var_table(struct var_table *parent);
 extern void destroy_var_table(struct var_table *tbl);
-extern struct expression *resolve_var(struct expression *expr);
-extern int assign_var(const char *ident, struct expression *expr);
+extern struct expression *resolve_var(const struct expression *expr);
+extern int assign_var(const char *ident, const struct expression *expr);
 
 #endif
