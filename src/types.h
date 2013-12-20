@@ -10,11 +10,10 @@
 #ifndef __TYPES_H_
 #define __TYPES_H_
 
-
-
 /* Windows */
 #ifdef _WIN32
 	#pragma warning(disable:4996)
+	#define inline	__inline
 	#ifdef _WIN64
 		#define x64
 	#else

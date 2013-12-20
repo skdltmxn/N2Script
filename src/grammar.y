@@ -45,7 +45,7 @@ typedef void* yyscan_t;
 	struct expression *expr;
 	int integer;
 	double real;
-	byte *str;
+	const char *str;
 }
 
 %token <integer> INTEGER

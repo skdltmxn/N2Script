@@ -12,13 +12,14 @@
 #include <string.h>
 #include "types.h"
 #include "util.h"
+#include "resource.h"
 
 /*
  * Creates a new string
  *
  * Callee is responsible for deleting new string
  */
-byte *create_string(byte *src)
+byte *create_string(const byte *src)
 {
 	byte *string = NULL;
 	size_t len = 0;
@@ -40,7 +41,7 @@ byte *create_string(byte *src)
 /*
  * Wrapper for strlen
  */
-size_t string_length(byte *str)
+size_t string_length(const byte *str)
 {
 	return strlen(str);
 }
@@ -58,7 +59,7 @@ byte *string_copy(byte *dest, const byte *src, size_t len)
  *
  * Callee is responsible for deleting new string
  */
-byte *string_concat(byte *left, byte *right)
+byte *string_concat(const byte *left, const byte *right)
 {
 	byte *string = NULL;
 	size_t len = string_length(left) + string_length(right);
@@ -72,6 +73,24 @@ byte *string_concat(byte *left, byte *right)
 	strcat(string, right);
 
 	string[len] = '\0';
+
+	return string;
+}
+
+byte *string_repeat(const byte *str, size_t count)
+{
+	byte *string = NULL;
+	size_t len = string_length(str);
+	size_t i;
+
+	string = (byte *)malloc((len * count + 1) * sizeof(byte));
+	if (!string)
+		return NULL;
+
+	string[len * count] = '\0';
+
+	for (i = 0; i < count; ++i)
+			string_copy(string + (i * len), str, len);
 
 	return string;
 }
@@ -106,7 +125,7 @@ byte string_to_hex(const char *str)
 /*
  * Encode unicode as UTF-8
  *
- * Supported unicode is in range of 0x0000 ~ 0xffff
+ * Supported code points are in range of 0x0000 ~ 0xffff
  * except surrogate pairs (0xd800 ~ 0xdfff)
  */
 int encode_utf8(byte *utf8, ui16 unicode)
@@ -139,4 +158,64 @@ int encode_utf8(byte *utf8, ui16 unicode)
 	
 	/* impossible */
 	return 0;
+}
+
+/* Linked list for testing */
+struct string_list
+{
+	struct string_list *next;
+	struct rsrc *rsrc;
+};
+
+int add_string(void **container, struct rsrc *rsrc)
+{
+	struct string_list *node = NULL;
+	struct string_list **iter = NULL;
+
+	if (!rsrc)
+		return 0;
+
+	node = (struct string_list *)malloc(sizeof(struct string_list));
+	if (!node)
+		return 0;
+
+	node->next = NULL;
+	node->rsrc = rsrc;
+
+	iter = (struct string_list **)container;
+
+	while (*iter) iter = &(*iter)->next;
+
+	*iter = node;
+
+	return 1;
+}
+
+const struct rsrc *search_string(void *container, const ui32 id)
+{
+	struct string_list *node = (struct string_list *)container;
+
+	while (node)
+	{
+		if (node->rsrc->id == id)
+			return node->rsrc;
+
+		node = node->next;
+	}
+
+	return NULL;
+}
+
+void destroy_rsrc_string(void *container)
+{
+	struct string_list *node = (struct string_list *)container;
+	struct string_list *temp = NULL;
+
+	while (node)
+	{
+		temp = node->next;
+		safe_free(node->rsrc->data);
+		safe_free(node);
+		node = temp;
+	}
 }

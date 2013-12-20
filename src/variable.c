@@ -60,9 +60,6 @@ void destroy_var_entry(struct var_entry *entry)
 
 	destroy_var_entry(entry->next);
 
-	if (entry->expr.type == EXP_STRING)
-		safe_free(entry->expr.value.string);
-
 	safe_free(entry);
 }
 
@@ -115,7 +112,7 @@ struct expression *resolve_var(struct expression *expr)
 	return &entry->expr;
 }
 
-int assign_var(char *ident, struct expression *expr)
+int assign_var(const char *ident, struct expression *expr)
 {
 	struct var_table *tbl = NULL;
 	struct var_entry *entry = NULL;

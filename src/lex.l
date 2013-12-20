@@ -12,6 +12,7 @@
 #include "ast.h"
 #include "grammar.h"
 #include "util.h"
+#include "resource.h"
 
 #define BUFFER_SIZE	4096
 #define YY_USER_ACTION yylloc->first_line = yylloc->last_line = yylineno; \
@@ -121,11 +122,11 @@ static ui32 _size = 0;
 					}
 <STRING>\"			{
 						yytext[yyleng - 1] = '\0';
-						yylval->str = create_string(get_string_buffer()); BEGIN(INITIAL); return STR; }
+						yylval->str = register_rsrc_string(get_string_buffer()); BEGIN(INITIAL); return STR; }
 if					{ return IF; }
 [0-9]+\.[0-9]+		{ yylval->real = atof(yytext); return REAL; }
 [0-9]+				{ yylval->integer = atoi(yytext); return INTEGER; }
-[a-zA-Z_][a-zA-Z0-9]* { yylval->str = create_string(yytext); return IDENT; }
+[a-zA-Z_][a-zA-Z0-9]* { yylval->str = register_rsrc_string(yytext); return IDENT; }
 [+\-*/=()]			{ return yytext[0]; }
 \n					{ yylloc->first_column = yylloc->last_column = 1; }
 %%

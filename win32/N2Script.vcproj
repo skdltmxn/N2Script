@@ -175,6 +175,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\crc.c"
+					>
+				</File>
+				<File
 					RelativePath="..\src\eval.c"
 					>
 				</File>
@@ -188,6 +192,10 @@
 				</File>
 				<File
 					RelativePath="..\src\main.c"
+					>
+				</File>
+				<File
+					RelativePath="..\src\resource.c"
 					>
 				</File>
 				<File
@@ -225,7 +233,15 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\resource.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\statement.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\string.h"
 					>
 				</File>
 				<File

@@ -39,10 +39,6 @@ void destroy_expression(struct expression *expr)
 	destroy_expression(expr->left);
 	destroy_expression(expr->right);
 
-	if (expr->type == EXP_STRING || expr->type == EXP_IDENT)
-		if (expr->value.string)
-			safe_free(expr->value.string);
-
 	safe_free(expr);
 }
 
@@ -107,7 +103,7 @@ struct statement *new_statement(int (*execute)(struct statement *stmt),
 	return stmt;
 }
 
-struct assign_stmt *new_assign_stmt(char *token, struct expression *expr)
+struct assign_stmt *new_assign_stmt(const char *token, struct expression *expr)
 {
 	struct assign_stmt *stmt = NULL;
 
@@ -128,7 +124,6 @@ struct assign_stmt *new_assign_stmt(char *token, struct expression *expr)
 void destroy_assign_stmt(struct statement *stmt)
 {
 	destroy_expression(stmt->assign->expr);
-	safe_free(stmt->assign->ident);
 	safe_free(stmt->assign);
 }
 
@@ -145,7 +140,7 @@ void add_statement(struct block *blk, struct statement *stmt)
 }
 
 struct expression *new_expression(const enum expr_type type,
-								  union exp_value *value,
+								  const union exp_value *value,
 								  struct var_table *vtbl)
 {
 	struct expression *expr = NULL;

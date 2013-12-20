@@ -15,6 +15,7 @@
 #include "ast.h"
 #include "eval.h"
 #include "util.h"
+#include "resource.h"
 
 #define TYPE_NUM(expr)	\
 	((expr)->type == EXP_INTEGER || (expr)->type == EXP_REAL)
@@ -53,8 +54,14 @@ int add_expression(struct expression *left,
 	/* STR + STR */
 	if (left->type == EXP_STRING && right->type == EXP_STRING)
 	{
-		result->value.string = 
-			string_concat(left->value.string, right->value.string);
+		byte *new_string = 
+				string_concat(left->value.string, right->value.string);
+
+		result->value.string = register_rsrc_string(new_string);
+
+		if (new_string != result->value.string)
+			safe_free(new_string);
+			
 		result->type = EXP_STRING;
 
 		return 1;
@@ -127,18 +134,15 @@ int mul_expression(struct expression *left,
 	if ((left->type == EXP_INTEGER && right->type == EXP_STRING) ||
 		 (left->type == EXP_STRING && right->type == EXP_INTEGER))
 	{
-		int i;
 		int count = (left->type == EXP_INTEGER) ?
 				left->value.integer : right->value.integer;
-		char *str = (left->type == EXP_STRING) ?
+		const byte *str = (left->type == EXP_STRING) ?
 				left->value.string : right->value.string;
-		ui32 len = string_length(str);
+		byte *new_string = string_repeat(str, count);
 
-		result->value.string = (char *)malloc((len * count + 1) * sizeof(char));
-		result->value.string[len * count] = '\0';
-
-		for (i = 0; i < count; ++i)
-			string_copy(result->value.string + (i * len), str, len);
+		result->value.string = register_rsrc_string(new_string);
+		if (new_string != result->value.string)
+			safe_free(new_string);
 
 		result->type = EXP_STRING;
 
@@ -374,9 +378,6 @@ int eval_assign(struct statement *stmt)
 	result.vtbl = assign->expr->vtbl;
 	if (!assign_var(assign->ident, &result))
 	{
-		if (result.type == EXP_STRING)
-			safe_free(result.value.string);
-
 		eval_error("Fatal: failed to assign `%s`\n", assign->ident);
 		return 0;
 	}

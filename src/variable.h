@@ -13,7 +13,7 @@
 struct var_entry
 {
 	struct var_entry *next;
-	char *name;
+	const char *name;
 	struct expression expr;
 };
 
@@ -26,6 +26,6 @@ struct var_table
 extern struct var_table *new_var_table(struct var_table *parent);
 extern void destroy_var_table(struct var_table *tbl);
 extern struct expression *resolve_var(struct expression *expr);
-extern int assign_var(char *ident, struct expression *expr);
+extern int assign_var(const char *ident, struct expression *expr);
 
 #endif

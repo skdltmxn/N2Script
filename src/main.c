@@ -13,6 +13,8 @@
 #include "types.h"
 #include "ast.h"
 #include "eval.h"
+#include "resource.h"
+#include "string.h"
 
 static struct ast_tree *root = NULL;
 
@@ -20,6 +22,11 @@ extern int yylex_init(yyscan_t scanner);
 extern int yyparse(struct ast_tree *root, yyscan_t scanner);
 extern int yylex_destroy(yyscan_t scanner);
 extern void destroy_string_buffer();
+
+static void init_rsrc()
+{
+	init_rsrc_pool(RSRC_STRING, add_string, search_string, destroy_rsrc_string);
+}
 
 struct ast_tree *get_ast_root()
 {
@@ -49,6 +56,7 @@ static int parse_script()
 void destroy_all()
 {
 	destroy_string_buffer();
+	destroy_rsrc();
 	destroy_ast(root);
 }
 
@@ -67,6 +75,8 @@ int main(int argc, char **argv)
 		fprintf(stderr, "out of memory!\n");
 		exit(-1);
 	}
+
+	init_rsrc();
 
 	if (!parse_script())
 		return 1;

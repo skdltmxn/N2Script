@@ -12,7 +12,7 @@
 
 struct assign_stmt
 {
-	char *ident;
+	const char *ident;
 	struct expression *expr;
 };
 

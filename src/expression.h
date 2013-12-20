@@ -25,7 +25,7 @@ enum expr_type
 
 union exp_value
 {
-	byte *string;
+	const byte *string;
 	int integer;
 	double real;
 };
