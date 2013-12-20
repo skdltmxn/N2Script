@@ -215,6 +215,7 @@ void destroy_rsrc_string(void *container)
 	{
 		temp = node->next;
 		safe_free(node->rsrc->data);
+		safe_free(node->rsrc);
 		safe_free(node);
 		node = temp;
 	}
