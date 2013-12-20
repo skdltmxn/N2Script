@@ -12,15 +12,15 @@
 
 struct var_entry
 {
-	struct var_entry *next;
-	const char *name;
-	struct expression expr;
+    struct var_entry *next;
+    const char *name;
+    struct expression expr;
 };
 
 struct var_table
 {
-	struct var_table *parent, *child, *next;
-	struct var_entry *entry[MAX_ENTRY];
+    struct var_table *parent, *child, *next;
+    struct var_entry *entry[MAX_ENTRY];
 };
 
 extern struct var_table *new_var_table(struct var_table *parent);

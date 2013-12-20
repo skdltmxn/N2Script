@@ -9,10 +9,10 @@
 #define __UTIL_H_
 
 #define safe_free(p) \
-	if ((p)) { \
-		free((p)); \
-		(p) = NULL; \
-	}
+    if ((p)) { \
+        free((p)); \
+        (p) = NULL; \
+    }
 
 extern byte *create_string(const byte *src);
 extern size_t string_length(const byte *str);

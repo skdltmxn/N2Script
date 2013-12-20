@@ -10,33 +10,33 @@
 
 enum expr_type
 {
-	EXP_REAL = 0,
-	EXP_INTEGER,
-	EXP_STRING,
-	EXP_IDENT,
-	EXP_ADD,
-	EXP_SUB,
-	EXP_MUL,
-	EXP_DIV,
-	EXP_XOR,
-	EXP_OR,
-	EXP_AND
+    EXP_REAL = 0,
+    EXP_INTEGER,
+    EXP_STRING,
+    EXP_IDENT,
+    EXP_ADD,
+    EXP_SUB,
+    EXP_MUL,
+    EXP_DIV,
+    EXP_XOR,
+    EXP_OR,
+    EXP_AND
 };
 
 union exp_value
 {
-	const byte *string;
-	int integer;
-	double real;
+    const byte *string;
+    int integer;
+    double real;
 };
 
 struct expression
 {
-	enum expr_type type;
-	union exp_value value;
-	struct expression *left;
-	struct expression *right;
-	struct var_table *vtbl;
+    enum expr_type type;
+    union exp_value value;
+    struct expression *left;
+    struct expression *right;
+    struct var_table *vtbl;
 };
 
 #endif

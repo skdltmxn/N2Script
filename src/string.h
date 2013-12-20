@@ -1,3 +1,10 @@
+/*
+ * string.h
+ *
+ *   Copyright (c) 2013 skdltmxn <supershop@naver.com>
+ *
+ */
+
 #ifndef __STRING_H_
 #define __STRING_H_
 

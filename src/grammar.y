@@ -51,7 +51,6 @@ typedef void* yyscan_t;
 %token <integer> INTEGER
 %token <real> REAL
 %token <str> STR IDENT
-%token ASSIGN
 %token IF
 
 %type <root> n2script

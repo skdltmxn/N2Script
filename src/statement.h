@@ -12,17 +12,17 @@
 
 struct assign_stmt
 {
-	const char *ident;
-	struct expression *expr;
+    const char *ident;
+    struct expression *expr;
 };
 
 struct statement
 {
-	struct statement *next;
+    struct statement *next;
 
-	struct assign_stmt *assign;
-	int (*execute)(const struct statement *stmt);
-	void (*destroy)(struct statement *stmt);
+    struct assign_stmt *assign;
+    int (*execute)(const struct statement *stmt);
+    void (*destroy)(struct statement *stmt);
 };
 
 #endif

@@ -16,150 +16,150 @@
 
 static ui32 hash(const char *s)
 {
-	ui32 hash = 0xB40BBE37;
-	size_t i;
+    ui32 hash = 0xB40BBE37;
+    size_t i;
 
-	for (i = 0; i < strlen(s); ++i)
-		hash ^= (hash << 4) ^ s[i];
+    for (i = 0; i < strlen(s); ++i)
+        hash ^= (hash << 4) ^ s[i];
 
-	return hash;
+    return hash;
 }
 
 struct var_table *new_var_table(struct var_table *parent)
 {
-	struct var_table *tbl = NULL;
+    struct var_table *tbl = NULL;
 
-	tbl = (struct var_table *)malloc(sizeof(*tbl));
-	if (!tbl)
-		return NULL;
+    tbl = (struct var_table *)malloc(sizeof(*tbl));
+    if (!tbl)
+        return NULL;
 
-	tbl->parent = NULL;
-	tbl->next = NULL;
-	tbl->child = NULL;
+    tbl->parent = NULL;
+    tbl->next = NULL;
+    tbl->child = NULL;
 
-	memset(tbl->entry, 0, sizeof(tbl->entry));
+    memset(tbl->entry, 0, sizeof(tbl->entry));
 
-	/* Link parent and child if parent is given */
-	if (parent)
-	{
-		struct var_table **iter = &parent->child;
-		
-		while (*iter) iter = &(*iter)->next;
+    /* Link parent and child if parent is given */
+    if (parent)
+    {
+        struct var_table **iter = &parent->child;
 
-		*iter = tbl;
-		tbl->parent = parent;
-	}
+        while (*iter) iter = &(*iter)->next;
 
-	return tbl;
+        *iter = tbl;
+        tbl->parent = parent;
+    }
+
+    return tbl;
 }
 
 void destroy_var_entry(struct var_entry *entry)
 {
-	if (!entry)
-		return;
+    if (!entry)
+        return;
 
-	destroy_var_entry(entry->next);
+    destroy_var_entry(entry->next);
 
-	safe_free(entry);
+    safe_free(entry);
 }
 
 void destroy_var_table(struct var_table *tbl)
 {
-	int i;
+    int i;
 
-	if (!tbl)
-		return;
+    if (!tbl)
+        return;
 
-	destroy_var_table(tbl->next);
-	destroy_var_table(tbl->child);
+    destroy_var_table(tbl->next);
+    destroy_var_table(tbl->child);
 
-	for (i = 0; i < MAX_ENTRY; ++i)
-		destroy_var_entry(tbl->entry[i]);
+    for (i = 0; i < MAX_ENTRY; ++i)
+        destroy_var_entry(tbl->entry[i]);
 
-	safe_free(tbl);
+    safe_free(tbl);
 }
 
 struct expression *resolve_var(const struct expression *expr)
 {
-	struct var_table *tbl = NULL;
-	struct var_entry *entry = NULL;
-	ui32 idx = 0;
+    struct var_table *tbl = NULL;
+    struct var_entry *entry = NULL;
+    ui32 idx = 0;
 
-	if (!expr)
-		return NULL;
+    if (!expr)
+        return NULL;
 
-	idx = hash(expr->value.string) % MAX_ENTRY;
+    idx = hash(expr->value.string) % MAX_ENTRY;
 
-	tbl = expr->vtbl;
+    tbl = expr->vtbl;
 
-	/* Loop from current scope to global */
-	while (tbl)
-	{
-		entry = tbl->entry[idx];
-		if (entry)
-		{
-			/* Look for exact match */
-			while (entry && strcmp(entry->name, expr->value.string))
-				entry = entry->next;
-		}
+    /* Loop from current scope to global */
+    while (tbl)
+    {
+        entry = tbl->entry[idx];
+        if (entry)
+        {
+            /* Look for exact match */
+            while (entry && strcmp(entry->name, expr->value.string))
+                entry = entry->next;
+        }
 
-		tbl = tbl->next;
-	}
+        tbl = tbl->next;
+    }
 
-	if (!entry)
-		eval_error("Failed to resolve variable `%s`\n", expr->value.string);
+    if (!entry)
+        eval_error("Failed to resolve variable `%s`\n", expr->value.string);
 
-	return &entry->expr;
+    return &entry->expr;
 }
 
 int assign_var(const char *ident, const struct expression *expr)
 {
-	struct var_table *tbl = NULL;
-	struct var_entry *entry = NULL;
-	ui32 idx = 0;
+    struct var_table *tbl = NULL;
+    struct var_entry *entry = NULL;
+    ui32 idx = 0;
 
-	if (!ident || !expr)
-		return 0;
+    if (!ident || !expr)
+        return 0;
 
-	idx = hash(ident) % MAX_ENTRY;
+    idx = hash(ident) % MAX_ENTRY;
 
-	tbl = expr->vtbl;
-	if (!tbl)
-		return 0;
+    tbl = expr->vtbl;
+    if (!tbl)
+        return 0;
 
-	entry = tbl->entry[idx];
+    entry = tbl->entry[idx];
 
-	/* If var already exists, update it */
-	while (entry)
-	{
-		if (!strcmp(entry->name, ident))
-		{
-			memcpy(&entry->expr, expr, sizeof(*expr));
-			break;
-		}
+    /* If var already exists, update it */
+    while (entry)
+    {
+        if (!strcmp(entry->name, ident))
+        {
+            memcpy(&entry->expr, expr, sizeof(*expr));
+            break;
+        }
 
-		entry = entry->next;
-	}
+        entry = entry->next;
+    }
 
-	if (!entry)
-	{
-		struct var_entry **iter = &tbl->entry[idx];
+    if (!entry)
+    {
+        struct var_entry **iter = &tbl->entry[idx];
 
-		/* Create new entry */
-		entry = (struct var_entry *)malloc(sizeof(*entry));
-		if (!entry)
-			return 0;
+        /* Create new entry */
+        entry = (struct var_entry *)malloc(sizeof(*entry));
+        if (!entry)
+            return 0;
 
-		entry->name	= ident;
-		memcpy(&entry->expr, expr, sizeof(*expr));
-		entry->next = NULL;
+        entry->name	= ident;
+        memcpy(&entry->expr, expr, sizeof(*expr));
+        entry->next = NULL;
 
-		while (*iter)
-			iter = &(*iter)->next;
+        while (*iter)
+            iter = &(*iter)->next;
 
-		*iter = entry;
-	}
+        *iter = entry;
+    }
 
 
-	return 1;
+    return 1;
 }

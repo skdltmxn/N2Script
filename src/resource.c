@@ -17,39 +17,39 @@
 
 struct rsrc_pool
 {
-	void *container;
-	int (*insert)(void **, struct rsrc *);
-	const struct rsrc * (*search)(void *, const ui32);
-	void (*destroy)(void *);
+    void *container;
+    int (*insert)(void **, struct rsrc *);
+    const struct rsrc * (*search)(void *, const ui32);
+    void (*destroy)(void *);
 };
 
 /* Each element can point any kind of container */
 static struct rsrc_pool rsrc_pool[RSRC_TYPE_COUNT] = {
-	{ NULL, NULL, NULL, NULL },
+    { NULL, NULL, NULL, NULL },
 };
 
 static int add_rsrc(const enum rsrc_type type, struct rsrc *rsrc)
 {
-	if (!rsrc_pool[type].insert)
-		return 0;
+    if (!rsrc_pool[type].insert)
+    return 0;
 
-	return rsrc_pool[type].insert(&rsrc_pool[type].container, rsrc);
+    return rsrc_pool[type].insert(&rsrc_pool[type].container, rsrc);
 }
 
 static inline const struct rsrc *search_rsrc(const enum rsrc_type type,
-											 const ui32 id)
+                                             const ui32 id)
 {
-	return rsrc_pool[type].search(rsrc_pool[type].container, id);
+    return rsrc_pool[type].search(rsrc_pool[type].container, id);
 }
 
 void init_rsrc_pool(const enum rsrc_type type,
-					int (*insert)(void **, struct rsrc *),
-					const struct rsrc * (*search)(void *, const ui32),
-					void (*destroy)(void *))
+                    int (*insert)(void **, struct rsrc *),
+                    const struct rsrc * (*search)(void *, const ui32),
+                    void (*destroy)(void *))
 {
-	rsrc_pool[type].insert = insert;
-	rsrc_pool[type].search = search;
-	rsrc_pool[type].destroy = destroy;
+    rsrc_pool[type].insert = insert;
+    rsrc_pool[type].search = search;
+    rsrc_pool[type].destroy = destroy;
 }
 
 /*
@@ -58,35 +58,35 @@ void init_rsrc_pool(const enum rsrc_type type,
  */
 const byte *register_rsrc_string(const byte *s)
 {
-	/* not sure yet if crc32 is unique enough */
-	ui32 id = crc32(s, strlen(s));
-	struct rsrc *rsrc = NULL;
-	byte *new_string = NULL;
+    /* not sure yet if crc32 is unique enough */
+    ui32 id = crc32(s, strlen(s));
+    struct rsrc *rsrc = NULL;
+    byte *new_string = NULL;
 
-	/* First check if there is existing string */
-	if ((rsrc = (struct rsrc *)search_rsrc(RSRC_STRING, id)))
-		return (byte *)rsrc->data;
+    /* First check if there is existing string */
+    if ((rsrc = (struct rsrc *)search_rsrc(RSRC_STRING, id)))
+        return (byte *)rsrc->data;
 
-	rsrc = (struct rsrc *)malloc(sizeof(struct rsrc));
-	if (!rsrc)
-		return NULL;
+    rsrc = (struct rsrc *)malloc(sizeof(struct rsrc));
+    if (!rsrc)
+        return NULL;
 
-	new_string = create_string(s);
-	rsrc->id = id;
-	rsrc->type = RSRC_STRING;
-	rsrc->data = (void *)new_string;
+    new_string = create_string(s);
+    rsrc->id = id;
+    rsrc->type = RSRC_STRING;
+    rsrc->data = (void *)new_string;
 
-	if (!add_rsrc(RSRC_STRING, rsrc))
-		return NULL;
+    if (!add_rsrc(RSRC_STRING, rsrc))
+        return NULL;
 
-	return new_string;
+    return new_string;
 }
 
 void destroy_rsrc()
 {
-	int i;
+    int i;
 
-	for (i = 0; i < RSRC_TYPE_COUNT; ++i)
-		if (rsrc_pool[i].destroy)
-			rsrc_pool[i].destroy(rsrc_pool[i].container);
+    for (i = 0; i < RSRC_TYPE_COUNT; ++i)
+        if (rsrc_pool[i].destroy)
+            rsrc_pool[i].destroy(rsrc_pool[i].container);
 }

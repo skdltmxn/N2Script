@@ -17,229 +17,229 @@
 
 struct ast_tree *init_ast()
 {
-	struct ast_tree *root = NULL;
+    struct ast_tree *root = NULL;
 
-	root = (struct ast_tree *)malloc(sizeof(*root));
+    root = (struct ast_tree *)malloc(sizeof(*root));
 
-	if (root)
-	{
-		root->blk = NULL;
-		root->var_tbl = new_var_table(NULL);
-		root->scanner = NULL;
-	}
+    if (root)
+    {
+        root->blk = NULL;
+        root->var_tbl = new_var_table(NULL);
+        root->scanner = NULL;
+    }
 
-	return root;
+    return root;
 }
 
 void destroy_expression(struct expression *expr)
 {
-	if (!expr)
-		return;
+    if (!expr)
+        return;
 
-	destroy_expression(expr->left);
-	destroy_expression(expr->right);
+    destroy_expression(expr->left);
+    destroy_expression(expr->right);
 
-	safe_free(expr);
+    safe_free(expr);
 }
 
 void destroy_statement(struct statement *stmt)
 {
-	if (!stmt)
-		return;
+    if (!stmt)
+        return;
 
-	destroy_statement(stmt->next);
+    destroy_statement(stmt->next);
 
-	stmt->destroy(stmt);
-	safe_free(stmt);
+    stmt->destroy(stmt);
+    safe_free(stmt);
 }
 
 void destroy_block(struct block *blk)
 {
-	if (!blk)
-		return;
+    if (!blk)
+        return;
 
-	destroy_statement(blk->stmts);
+    destroy_statement(blk->stmts);
 
-	safe_free(blk);
+    safe_free(blk);
 }
 
 void destroy_ast(struct ast_tree *root)
 {
-	if (!root)
-		return;
+    if (!root)
+        return;
 
-	destroy_block(root->blk);
-	destroy_var_table(root->var_tbl);
+    destroy_block(root->blk);
+    destroy_var_table(root->var_tbl);
 
-	safe_free(root);
+    safe_free(root);
 }
 
 struct block *new_block()
 {
-	struct block *blk = NULL;
+    struct block *blk = NULL;
 
-	blk = (struct block *)malloc(sizeof(*blk));
+    blk = (struct block *)malloc(sizeof(*blk));
 
-	if (blk)
-		blk->stmts = NULL;
+    if (blk)
+        blk->stmts = NULL;
 
-	return blk;
+    return blk;
 }
 
 struct statement *new_statement(int (*execute)(const struct statement *stmt),
-								void (*destroy)(struct statement *stmt))
+                                void (*destroy)(struct statement *stmt))
 {
-	struct statement *stmt = NULL;
+    struct statement *stmt = NULL;
 
-	stmt = (struct statement *)malloc(sizeof(*stmt));
+    stmt = (struct statement *)malloc(sizeof(*stmt));
 
-	if (stmt)
-	{
-		stmt->next = NULL;
-		stmt->execute = execute;
-		stmt->destroy = destroy;
-	}
+    if (stmt)
+    {
+        stmt->next = NULL;
+        stmt->execute = execute;
+        stmt->destroy = destroy;
+    }
 
-	return stmt;
+    return stmt;
 }
 
 struct assign_stmt *new_assign_stmt(const char *token, struct expression *expr)
 {
-	struct assign_stmt *stmt = NULL;
+    struct assign_stmt *stmt = NULL;
 
-	if (!token || !expr)
-		return NULL;
+    if (!token || !expr)
+        return NULL;
 
-	stmt = (struct assign_stmt *)malloc(sizeof(*stmt));
+    stmt = (struct assign_stmt *)malloc(sizeof(*stmt));
 
-	if (stmt)
-	{
-		stmt->ident = token;
-		stmt->expr = expr;
-	}
+    if (stmt)
+    {
+        stmt->ident = token;
+        stmt->expr = expr;
+    }
 
-	return stmt;
+    return stmt;
 }
 
 void destroy_assign_stmt(struct statement *stmt)
 {
-	destroy_expression(stmt->assign->expr);
-	safe_free(stmt->assign);
+    destroy_expression(stmt->assign->expr);
+    safe_free(stmt->assign);
 }
 
 void add_statement(struct block *blk, struct statement *stmt)
 {
-	struct statement **iter = NULL;
-	if (!blk || !stmt)
-		return;
+    struct statement **iter = NULL;
+    if (!blk || !stmt)
+        return;
 
-	iter = &blk->stmts;
-	while (*iter) iter = &(*iter)->next;
+    iter = &blk->stmts;
+    while (*iter) iter = &(*iter)->next;
 
-	*iter = stmt;
+    *iter = stmt;
 }
 
 struct expression *new_expression(const enum expr_type type,
-								  const union exp_value *value,
-								  struct var_table *vtbl)
+                                  const union exp_value *value,
+                                  struct var_table *vtbl)
 {
-	struct expression *expr = NULL;
+    struct expression *expr = NULL;
 
-	expr = (struct expression *)malloc(sizeof(*expr));
+    expr = (struct expression *)malloc(sizeof(*expr));
 
-	if (expr)
-	{
-		expr->left = NULL;
-		expr->right = NULL;
-		expr->type = type;
-		memcpy(&expr->value, value, sizeof(*value));
-		expr->vtbl = vtbl;
-	}
+    if (expr)
+    {
+        expr->left = NULL;
+        expr->right = NULL;
+        expr->type = type;
+        memcpy(&expr->value, value, sizeof(*value));
+        expr->vtbl = vtbl;
+    }
 
-	return expr;
+    return expr;
 }
 
 struct expression *new_operation(const enum expr_type type,
-								 struct expression *left,
-								 struct expression *right)
+                                 struct expression *left,
+                                 struct expression *right)
 {
-	struct expression *expr = NULL;
-	int check = TYPE_CHECK_OK;
+    struct expression *expr = NULL;
+    int check = TYPE_CHECK_OK;
 
-	expr = (struct expression *)malloc(sizeof(*expr));
+    expr = (struct expression *)malloc(sizeof(*expr));
 
-	if (!expr)
-		return NULL;
+    if (!expr)
+        return NULL;
 
-	check = type_check(type, left, right);
+    check = type_check(type, left, right);
 
-	/* cannot evaluate for now */
-	if (check == TYPE_CHECK_PENDING)
-	{
-		expr->left = left;
-		expr->right = right;
-		expr->type = type;
-		expr->vtbl = left->vtbl;
-		return expr;
-	}
-	/* syntax error */
-	else if (check == TYPE_CHECK_ERROR)
-		parse_error(get_ast_root(), "type mismatch");
+    /* cannot evaluate for now */
+    if (check == TYPE_CHECK_PENDING)
+    {
+        expr->left = left;
+        expr->right = right;
+        expr->type = type;
+        expr->vtbl = left->vtbl;
+        return expr;
+    }
+    /* syntax error */
+    else if (check == TYPE_CHECK_ERROR)
+        parse_error(get_ast_root(), "type mismatch");
 
-	/* evaluate as much as possible */
-	expr->left = NULL;
-	expr->right = NULL;
-	expr->vtbl = left->vtbl;
+    /* evaluate as much as possible */
+    expr->left = NULL;
+    expr->right = NULL;
+    expr->vtbl = left->vtbl;
 
-	if (type == EXP_ADD)
-	{
-		if (add_expression(left, right, expr))
-		{
-			destroy_expression(left);
-			destroy_expression(right);
-			return expr;
-		}
-	}
-	else if (type == EXP_SUB)
-	{
-		if (sub_expression(left, right, expr))
-		{
-			destroy_expression(left);
-			destroy_expression(right);
-			return expr;
-		}
-	}
-	else if (type == EXP_MUL)
-	{
-		if (mul_expression(left, right, expr))
-		{
-			destroy_expression(left);
-			destroy_expression(right);
-			return expr;
-		}
-	}
-	else if (type == EXP_DIV)
-	{
-		if (div_expression(left, right, expr))
-		{
-			destroy_expression(left);
-			destroy_expression(right);
-			return expr;
-		}
-	}
+    if (type == EXP_ADD)
+    {
+        if (add_expression(left, right, expr))
+        {
+            destroy_expression(left);
+            destroy_expression(right);
+            return expr;
+        }
+    }
+    else if (type == EXP_SUB)
+    {
+        if (sub_expression(left, right, expr))
+        {
+            destroy_expression(left);
+            destroy_expression(right);
+            return expr;
+        }
+    }
+    else if (type == EXP_MUL)
+    {
+        if (mul_expression(left, right, expr))
+        {
+            destroy_expression(left);
+            destroy_expression(right);
+            return expr;
+        }
+    }
+    else if (type == EXP_DIV)
+    {
+        if (div_expression(left, right, expr))
+        {
+            destroy_expression(left);
+            destroy_expression(right);
+            return expr;
+        }
+    }
 
-	return expr;
+    return expr;
 }
 
 extern YYLTYPE *yyget_lloc(yyscan_t);
 extern int yylex_destroy(yyscan_t scanner);
 void parse_error(struct ast_tree *root, const char *msg)
 {
-	YYLTYPE *loc = yyget_lloc(root->scanner);
-	fprintf(stderr, "Parse error: %s (line: %d, col: %d)", msg,
-		loc->first_line,
-		loc->last_column);
-	yylex_destroy(root->scanner);
-	destroy_all();
-	exit(-3);
+    YYLTYPE *loc = yyget_lloc(root->scanner);
+    fprintf(stderr, "Parse error: %s (line: %d, col: %d)", msg,
+        loc->first_line,
+        loc->last_column);
+    yylex_destroy(root->scanner);
+    destroy_all();
+    exit(-3);
 }

@@ -127,7 +127,7 @@ if					{ return IF; }
 [0-9]+\.[0-9]+		{ yylval->real = atof(yytext); return REAL; }
 [0-9]+				{ yylval->integer = atoi(yytext); return INTEGER; }
 [a-zA-Z_][a-zA-Z0-9]* { yylval->str = register_rsrc_string(yytext); return IDENT; }
-[+\-*/=()]			{ return yytext[0]; }
+[+\-*/=(){}]		{ return yytext[0]; }
 \n					{ yylloc->first_column = yylloc->last_column = 1; }
 %%
 

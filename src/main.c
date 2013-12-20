@@ -25,29 +25,29 @@ extern void destroy_string_buffer();
 
 static void init_rsrc()
 {
-	init_rsrc_pool(RSRC_STRING, add_string, search_string, destroy_rsrc_string);
+    init_rsrc_pool(RSRC_STRING, add_string, search_string, destroy_rsrc_string);
 }
 
 struct ast_tree *get_ast_root()
 {
-	return root;
+    return root;
 }
 
 static int parse_script()
 {
-	yyscan_t scanner;
+    yyscan_t scanner;
 
-	if (yylex_init(&scanner))
-		return 0;
-
-	root->scanner = scanner;
-	if (yyparse(root, scanner))
+    if (yylex_init(&scanner))
         return 0;
 
-	destroy_string_buffer();
-	yylex_destroy(scanner);
+    root->scanner = scanner;
+    if (yyparse(root, scanner))
+        return 0;
 
-	return 1;
+    destroy_string_buffer();
+    yylex_destroy(scanner);
+
+    return 1;
 }
 
 /*
@@ -55,34 +55,34 @@ static int parse_script()
  */
 void destroy_all()
 {
-	destroy_string_buffer();
-	destroy_rsrc();
-	destroy_ast(root);
+    destroy_string_buffer();
+    destroy_rsrc();
+    destroy_ast(root);
 }
 
 int main(int argc, char **argv)
 {
-/* Default encoding is UTF-8 */	
+    /* Default encoding is UTF-8 */	
 #ifdef _WIN32
-	SetConsoleOutputCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
 #else
-	setlocale(LC_ALL, "");
+    setlocale(LC_ALL, "");
 #endif
 
-	root = init_ast();
-	if (!root)
-	{
-		fprintf(stderr, "out of memory!\n");
-		exit(-1);
-	}
+    root = init_ast();
+    if (!root)
+    {
+        fprintf(stderr, "out of memory!\n");
+        exit(-1);
+    }
 
-	init_rsrc();
+    init_rsrc();
 
-	if (!parse_script())
-		return 1;
+    if (!parse_script())
+        return 1;
 
-	evaluate(root);
-	destroy_all();
+    evaluate(root);
+    destroy_all();
 
-	return 0;
+    return 0;
 }
