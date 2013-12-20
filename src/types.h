@@ -13,7 +13,7 @@
 /* Windows */
 #ifdef _WIN32
 #  pragma warning(disable:4996)
-#  define inline	__inline
+#  define inline __inline
 #  ifdef _WIN64
 #    define x64
 #  else

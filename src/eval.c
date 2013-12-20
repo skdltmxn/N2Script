@@ -17,7 +17,7 @@
 #include "util.h"
 #include "resource.h"
 
-#define TYPE_NUM(expr)	\
+#define TYPE_NUM(expr) \
     ((expr)->type == EXP_INTEGER || (expr)->type == EXP_REAL)
 
 int evaluate(const struct ast_tree *root)
