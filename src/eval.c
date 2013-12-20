@@ -67,8 +67,7 @@ int add_expression(const struct expression *left,
 		return 1;
 	}
 	/* NUM + NUM */
-	else if ((left->type == EXP_INTEGER || left->type == EXP_REAL) &&
-			  (right->type == EXP_INTEGER || right->type == EXP_REAL))
+	else if (TYPE_NUM(left) && TYPE_NUM(right))
 	{
 		/* FLOAT + ? = FLOAT */
 		if (left->type == EXP_REAL || right->type == EXP_REAL)
@@ -97,8 +96,7 @@ int sub_expression(const struct expression *left,
 				   const struct expression *right,
 				   struct expression *result)
 {
-	if ((left->type == EXP_INTEGER || left->type == EXP_REAL) &&
-		(right->type == EXP_INTEGER || right->type == EXP_REAL))
+	if (TYPE_NUM(left) && TYPE_NUM(right))
 	{
 		/* FLOAT + ? = FLOAT */
 		if (left->type == EXP_REAL || right->type == EXP_REAL)
@@ -149,8 +147,7 @@ int mul_expression(const struct expression *left,
 		return 1;
 	}
 	/* NUM * NUM */
-	else if ((left->type == EXP_INTEGER || left->type == EXP_REAL) &&
-			  (right->type == EXP_INTEGER || right->type == EXP_REAL))
+	else if (TYPE_NUM(left) && TYPE_NUM(right))
 	{
 		/* FLOAT * ? = FLOAT */
 		if (left->type == EXP_REAL || right->type == EXP_REAL)
@@ -183,8 +180,7 @@ int div_expression(const struct expression *left,
 	if (!left || !right || !result)
 			return 0;
 
-	if ((left->type == EXP_INTEGER || left->type == EXP_REAL) &&
-		(right->type == EXP_INTEGER || right->type == EXP_REAL))
+	if (TYPE_NUM(left) && TYPE_NUM(right))
 	{
 		/* FLOAT / ? = FLOAT */
 		if (left->type == EXP_REAL || right->type == EXP_REAL)
