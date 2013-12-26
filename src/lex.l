@@ -126,6 +126,7 @@ static ui32 _size = 0;
                              yylval->str = register_rsrc_string(get_string_buffer()); BEGIN(INITIAL); return STR;
                          }
 if                       return IF;
+else                     return ELSE;
 [0-9]+\.[0-9]+           { yylval->real = atof(yytext); return REAL; }
 [0-9]+                   { yylval->integer = atoi(yytext); return INTEGER; }
 [a-zA-Z_][a-zA-Z0-9]*    { yylval->str = register_rsrc_string(yytext); return IDENT; }

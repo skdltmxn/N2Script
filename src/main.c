@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     if (!parse_script())
         return 1;
 
-    evaluate(root);
+    evaluate(root->stmts);
     destroy_all();
 
     return 0;

@@ -16,11 +16,23 @@ struct assign_stmt
     struct expression *expr;
 };
 
+struct if_stmt
+{
+    struct expression *condition;
+    struct statement *true_stmts;
+    struct statement *false_stmts;
+};
+
 struct statement
 {
     struct statement *next;
 
-    struct assign_stmt *assign;
+    union
+    {
+        struct assign_stmt *assign;
+        struct if_stmt *ifstmt;
+    };
+
     int (*execute)(const struct statement *stmt);
     void (*destroy)(struct statement *stmt);
 };

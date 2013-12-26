@@ -40,7 +40,6 @@ typedef void* yyscan_t;
 
 %union {
     struct ast_tree *root;
-    struct block *blk;
     struct statement *stmt;
     struct expression *expr;
     int integer;
@@ -51,11 +50,10 @@ typedef void* yyscan_t;
 %token <integer> INTEGER
 %token <real> REAL
 %token <str> STR IDENT
-%token IF
+%token IF ELSE
 
 %type <root> n2script
-%type <blk> statements
-%type <stmt> statement assignment
+%type <stmt> statements statement assignment ifstmt
 %type <expr> expr
 
 %right '='
@@ -64,19 +62,28 @@ typedef void* yyscan_t;
 %%
 
 n2script:   /* empty */
-            | { current = root->var_tbl; } statements { root->blk = $2; }
+            | { current = root->var_tbl; } statements { root->stmts = $2; }
             ;
             
 statements: statements statement { add_statement($1, $2); }
-            | statement          { $$ = new_block(); 
-                                   add_statement($$, $1); }
+            | statement          { $$ = $1; }
             ;
             
-statement:  assignment           { $$ = $1; }
+statement:  '{' statements '}'   { $$ = $2; }
+            | assignment         { $$ = $1; }
+            | ifstmt			 { $$ = $1; }
             ;
             
 assignment: IDENT '=' expr       { $$ = new_statement(eval_assign, destroy_assign_stmt); 
                                    $$->assign = new_assign_stmt($1, $3); }     
+            ;
+            
+ifstmt:     IF '(' expr ')' statement 
+                                 { $$ = new_statement(eval_if, destroy_if_stmt);
+                                   $$->ifstmt = new_if_stmt($3, $5, NULL); }
+            | IF '(' expr ')' statement ELSE statement
+                                 { $$ = new_statement(eval_if, destroy_if_stmt);
+                                   $$->ifstmt = new_if_stmt($3, $5, $7); }
             ;
             
 expr:       expr '+' expr        { $$ = new_operation(EXP_ADD, $1, $3); }

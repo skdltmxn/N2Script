@@ -20,21 +20,16 @@
 #define TYPE_NUM(expr) \
     ((expr)->type == EXP_INTEGER || (expr)->type == EXP_REAL)
 
-int evaluate(const struct ast_tree *root)
+int evaluate(struct statement *stmts)
 {
-    struct statement *stmts;
+    struct statement *stmt = stmts;
 
-    if (!root->blk)
-        return 1;
-
-    stmts = root->blk->stmts;
-
-    while (stmts)
+    while (stmt)
     {
-        if (!stmts->execute(stmts))
+        if (!stmt->execute(stmt))
             return 0;
 
-        stmts = stmts->next;
+        stmt = stmt->next;
     }
 
     return 1;
@@ -262,6 +257,31 @@ int type_check(const enum expr_type type,
     return TYPE_CHECK_OK;
 }
 
+/*
+ * Convert expression to boolean
+ */
+static int to_boolean(const struct expression *expr)
+{
+    if (!expr)
+        return 0;
+
+    switch (expr->type)
+    {
+    case EXP_INTEGER:
+        return (expr->value.integer != 0);
+
+    case EXP_REAL:
+        return (expr->value.real != 0.0);
+
+    case EXP_STRING:
+        return (expr->value.string[0] != '\0');
+
+    /* all other types cannot be converted */
+    default:
+        return 0;
+    }
+}
+
 static struct expression *eval_expression(struct expression *expr,
                                           struct expression *result)
 {
@@ -354,7 +374,8 @@ static struct expression *eval_expression(struct expression *expr,
         return expr;
 
     case EXP_IDENT:
-        return resolve_var(expr);
+        memcpy(result, resolve_var(expr), sizeof(struct expression));
+        return result;
     }
 
     return NULL;
@@ -373,10 +394,7 @@ int eval_assign(const struct statement *stmt)
 
     result.vtbl = assign->expr->vtbl;
     if (!assign_var(assign->ident, &result))
-    {
         eval_error("Fatal: failed to assign `%s`\n", assign->ident);
-        return 0;
-    }
 
     if (result.type == EXP_INTEGER)
         printf("%s <- %d\n", assign->ident, result.value.integer);
@@ -385,7 +403,25 @@ int eval_assign(const struct statement *stmt)
     else if (result.type == EXP_STRING)
         printf("%s <- %s\n", assign->ident, result.value.string);
 
+    return 1;
+}
 
+int eval_if(const struct statement *stmt)
+{
+    struct if_stmt *ifstmt = stmt->ifstmt;
+    struct expression result;
+
+    if (!ifstmt)
+        return 0;
+
+    if (!eval_expression(ifstmt->condition, &result))
+        return 0;
+
+    if (to_boolean(&result))
+        evaluate(ifstmt->true_stmts);
+    else
+        evaluate(ifstmt->false_stmts);
+    
     return 1;
 }
 

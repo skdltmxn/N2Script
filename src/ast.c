@@ -23,7 +23,7 @@ struct ast_tree *init_ast()
 
     if (root)
     {
-        root->blk = NULL;
+        root->stmts = NULL;
         root->var_tbl = new_var_table(NULL);
         root->scanner = NULL;
     }
@@ -48,19 +48,9 @@ void destroy_statement(struct statement *stmt)
         return;
 
     destroy_statement(stmt->next);
-
     stmt->destroy(stmt);
+
     safe_free(stmt);
-}
-
-void destroy_block(struct block *blk)
-{
-    if (!blk)
-        return;
-
-    destroy_statement(blk->stmts);
-
-    safe_free(blk);
 }
 
 void destroy_ast(struct ast_tree *root)
@@ -68,22 +58,10 @@ void destroy_ast(struct ast_tree *root)
     if (!root)
         return;
 
-    destroy_block(root->blk);
+    destroy_statement(root->stmts);
     destroy_var_table(root->var_tbl);
 
     safe_free(root);
-}
-
-struct block *new_block()
-{
-    struct block *blk = NULL;
-
-    blk = (struct block *)malloc(sizeof(*blk));
-
-    if (blk)
-        blk->stmts = NULL;
-
-    return blk;
 }
 
 struct statement *new_statement(int (*execute)(const struct statement *stmt),
@@ -121,22 +99,52 @@ struct assign_stmt *new_assign_stmt(const char *token, struct expression *expr)
     return stmt;
 }
 
+struct if_stmt *new_if_stmt(struct expression *condition,
+                            struct statement *true_stmts,
+                            struct statement *false_stmts)
+{
+    struct if_stmt *stmt = NULL;
+
+    if (!condition)
+        return NULL;
+
+    stmt = (struct if_stmt *)malloc(sizeof(*stmt));
+
+    if (stmt)
+    {
+        stmt->condition = condition;
+        stmt->true_stmts = true_stmts;
+        stmt->false_stmts = false_stmts;
+    }
+
+    return stmt;
+}
+
 void destroy_assign_stmt(struct statement *stmt)
 {
     destroy_expression(stmt->assign->expr);
     safe_free(stmt->assign);
 }
 
-void add_statement(struct block *blk, struct statement *stmt)
+void destroy_if_stmt(struct statement *stmt)
+{
+    destroy_expression(stmt->ifstmt->condition);
+    destroy_statement(stmt->ifstmt->true_stmts);
+    destroy_statement(stmt->ifstmt->false_stmts);
+    safe_free(stmt->ifstmt);
+}
+
+void add_statement(struct statement *before, struct statement *after)
 {
     struct statement **iter = NULL;
-    if (!blk || !stmt)
+    if (!before || !after)
         return;
 
-    iter = &blk->stmts;
+    iter = &before;
+
     while (*iter) iter = &(*iter)->next;
 
-    *iter = stmt;
+    *iter = after;
 }
 
 struct expression *new_expression(const enum expr_type type,
