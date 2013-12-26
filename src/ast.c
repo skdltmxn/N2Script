@@ -19,14 +19,11 @@ struct ast_tree *init_ast()
 {
     struct ast_tree *root = NULL;
 
-    root = (struct ast_tree *)malloc(sizeof(*root));
+    root = (struct ast_tree *)safe_malloc(sizeof(*root));
 
-    if (root)
-    {
-        root->stmts = NULL;
-        root->var_tbl = new_var_table(NULL);
-        root->scanner = NULL;
-    }
+    root->stmts = NULL;
+    root->var_tbl = new_var_table(NULL);
+    root->scanner = NULL;
 
     return root;
 }
@@ -55,9 +52,6 @@ void destroy_statement(struct statement *stmt)
 
 void destroy_ast(struct ast_tree *root)
 {
-    if (!root)
-        return;
-
     destroy_statement(root->stmts);
     destroy_var_table(root->var_tbl);
 
@@ -69,14 +63,11 @@ struct statement *new_statement(int (*execute)(const struct statement *stmt),
 {
     struct statement *stmt = NULL;
 
-    stmt = (struct statement *)malloc(sizeof(*stmt));
+    stmt = (struct statement *)safe_malloc(sizeof(*stmt));
 
-    if (stmt)
-    {
-        stmt->next = NULL;
-        stmt->execute = execute;
-        stmt->destroy = destroy;
-    }
+    stmt->next = NULL;
+    stmt->execute = execute;
+    stmt->destroy = destroy;
 
     return stmt;
 }
@@ -85,16 +76,10 @@ struct assign_stmt *new_assign_stmt(const char *token, struct expression *expr)
 {
     struct assign_stmt *stmt = NULL;
 
-    if (!token || !expr)
-        return NULL;
+    stmt = (struct assign_stmt *)safe_malloc(sizeof(*stmt));
 
-    stmt = (struct assign_stmt *)malloc(sizeof(*stmt));
-
-    if (stmt)
-    {
-        stmt->ident = token;
-        stmt->expr = expr;
-    }
+    stmt->ident = token;
+    stmt->expr = expr;
 
     return stmt;
 }
@@ -105,17 +90,11 @@ struct if_stmt *new_if_stmt(struct expression *condition,
 {
     struct if_stmt *stmt = NULL;
 
-    if (!condition)
-        return NULL;
+    stmt = (struct if_stmt *)safe_malloc(sizeof(*stmt));
 
-    stmt = (struct if_stmt *)malloc(sizeof(*stmt));
-
-    if (stmt)
-    {
-        stmt->condition = condition;
-        stmt->true_stmts = true_stmts;
-        stmt->false_stmts = false_stmts;
-    }
+    stmt->condition = condition;
+    stmt->true_stmts = true_stmts;
+    stmt->false_stmts = false_stmts;
 
     return stmt;
 }
@@ -137,8 +116,6 @@ void destroy_if_stmt(struct statement *stmt)
 void add_statement(struct statement *before, struct statement *after)
 {
     struct statement **iter = NULL;
-    if (!before || !after)
-        return;
 
     iter = &before;
 
@@ -152,17 +129,13 @@ struct expression *new_expression(const enum expr_type type,
                                   struct var_table *vtbl)
 {
     struct expression *expr = NULL;
+    expr = (struct expression *)safe_malloc(sizeof(*expr));
 
-    expr = (struct expression *)malloc(sizeof(*expr));
-
-    if (expr)
-    {
-        expr->left = NULL;
-        expr->right = NULL;
-        expr->type = type;
-        memcpy(&expr->value, value, sizeof(*value));
-        expr->vtbl = vtbl;
-    }
+    expr->left = NULL;
+    expr->right = NULL;
+    expr->type = type;
+    memcpy(&expr->value, value, sizeof(*value));
+    expr->vtbl = vtbl;
 
     return expr;
 }
@@ -174,10 +147,7 @@ struct expression *new_operation(const enum expr_type type,
     struct expression *expr = NULL;
     int check = TYPE_CHECK_OK;
 
-    expr = (struct expression *)malloc(sizeof(*expr));
-
-    if (!expr)
-        return NULL;
+    expr = (struct expression *)safe_malloc(sizeof(*expr));
 
     check = type_check(type, left, right);
 

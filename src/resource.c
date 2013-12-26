@@ -67,9 +67,7 @@ const byte *register_rsrc_string(const byte *s)
     if ((rsrc = (struct rsrc *)search_rsrc(RSRC_STRING, id)))
         return (byte *)rsrc->data;
 
-    rsrc = (struct rsrc *)malloc(sizeof(struct rsrc));
-    if (!rsrc)
-        return NULL;
+    rsrc = (struct rsrc *)safe_malloc(sizeof(struct rsrc));
 
     new_string = create_string(s);
     rsrc->id = id;

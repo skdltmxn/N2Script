@@ -29,9 +29,7 @@ struct var_table *new_var_table(struct var_table *parent)
 {
     struct var_table *tbl = NULL;
 
-    tbl = (struct var_table *)malloc(sizeof(*tbl));
-    if (!tbl)
-        return NULL;
+    tbl = (struct var_table *)safe_malloc(sizeof(*tbl));
 
     tbl->parent = NULL;
     tbl->next = NULL;
@@ -85,9 +83,6 @@ struct expression *resolve_var(const struct expression *expr)
     struct var_entry *entry = NULL;
     ui32 idx = 0;
 
-    if (!expr)
-        return NULL;
-
     idx = hash(expr->value.string) % MAX_ENTRY;
 
     tbl = expr->vtbl;
@@ -118,14 +113,9 @@ int assign_var(const char *ident, const struct expression *expr)
     struct var_entry *entry = NULL;
     ui32 idx = 0;
 
-    if (!ident || !expr)
-        return 0;
-
     idx = hash(ident) % MAX_ENTRY;
 
     tbl = expr->vtbl;
-    if (!tbl)
-        return 0;
 
     entry = tbl->entry[idx];
 
@@ -146,9 +136,7 @@ int assign_var(const char *ident, const struct expression *expr)
         struct var_entry **iter = &tbl->entry[idx];
 
         /* Create new entry */
-        entry = (struct var_entry *)malloc(sizeof(*entry));
-        if (!entry)
-            return 0;
+        entry = (struct var_entry *)safe_malloc(sizeof(*entry));
 
         entry->name	= ident;
         memcpy(&entry->expr, expr, sizeof(*expr));

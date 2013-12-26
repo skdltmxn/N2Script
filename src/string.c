@@ -28,9 +28,7 @@ byte *create_string(const byte *src)
         return NULL;
 
     len = strlen(src);
-    string = (byte *)malloc((len + 1) * sizeof(byte));
-    if (!string)
-        return NULL;
+    string = (byte *)safe_malloc((len + 1) * sizeof(byte));
 
     memset(string, 0, len + 1);
     string_copy(string, src, len);
@@ -64,10 +62,7 @@ byte *string_concat(const byte *left, const byte *right)
     byte *string = NULL;
     size_t len = string_length(left) + string_length(right);
 
-    string = (byte *)malloc((len + 1) * sizeof(byte));
-
-    if (!string)
-        return NULL;
+    string = (byte *)safe_malloc((len + 1) * sizeof(byte));
 
     strcpy(string, left);
     strcat(string, right);
@@ -83,10 +78,7 @@ byte *string_repeat(const byte *str, const size_t count)
     size_t len = string_length(str);
     size_t i;
 
-    string = (byte *)malloc((len * count + 1) * sizeof(byte));
-    if (!string)
-        return NULL;
-
+    string = (byte *)safe_malloc((len * count + 1) * sizeof(byte));
     string[len * count] = '\0';
 
     for (i = 0; i < count; ++i)
@@ -172,12 +164,7 @@ int add_string(void **container, struct rsrc *rsrc)
     struct string_list *node = NULL;
     struct string_list **iter = NULL;
 
-    if (!rsrc)
-        return 0;
-
-    node = (struct string_list *)malloc(sizeof(struct string_list));
-    if (!node)
-        return 0;
+    node = (struct string_list *)safe_malloc(sizeof(struct string_list));
 
     node->next = NULL;
     node->rsrc = rsrc;

@@ -43,9 +43,6 @@ int add_expression(const struct expression *left,
                    const struct expression *right,
                    struct expression *result)
 {
-    if (!left || !right || !result)
-        return 0;
-
     /* STR + STR */
     if (left->type == EXP_STRING && right->type == EXP_STRING)
     {
@@ -120,9 +117,6 @@ int mul_expression(const struct expression *left,
                    const struct expression *right,
                    struct expression *result)
 {
-    if (!left || !right || !result)
-        return 0;
-
     /* INTEGER * STR */
     if ((left->type == EXP_INTEGER && right->type == EXP_STRING) ||
         (left->type == EXP_STRING && right->type == EXP_INTEGER))
@@ -172,9 +166,6 @@ int div_expression(const struct expression *left,
                    const struct expression *right,
                    struct expression *result)
 {
-    if (!left || !right || !result)
-        return 0;
-
     if (TYPE_NUM(left) && TYPE_NUM(right))
     {
         /* FLOAT / ? = FLOAT */
@@ -210,9 +201,6 @@ int type_check(const enum expr_type type,
                const struct expression *left,
                const struct expression *right)
 {
-    if (!left || !right)
-        return TYPE_CHECK_ERROR;
-
     if (left->type > EXP_STRING || right->type > EXP_STRING)
         return TYPE_CHECK_PENDING;
 
@@ -262,9 +250,6 @@ int type_check(const enum expr_type type,
  */
 static int to_boolean(const struct expression *expr)
 {
-    if (!expr)
-        return 0;
-
     switch (expr->type)
     {
     case EXP_INTEGER:
@@ -288,9 +273,6 @@ static struct expression *eval_expression(struct expression *expr,
     struct expression *left = NULL;
     struct expression *right = NULL;
     struct expression save;
-
-    if (!expr || !result)
-        return NULL;
 
     switch (expr->type)
     {
@@ -386,9 +368,6 @@ int eval_assign(const struct statement *stmt)
     struct assign_stmt *assign = stmt->assign;
     struct expression result;
 
-    if (!assign)
-        return 0;
-
     if (!eval_expression(assign->expr, &result))
         return 0;
 
@@ -410,9 +389,6 @@ int eval_if(const struct statement *stmt)
 {
     struct if_stmt *ifstmt = stmt->ifstmt;
     struct expression result;
-
-    if (!ifstmt)
-        return 0;
 
     if (!eval_expression(ifstmt->condition, &result))
         return 0;
