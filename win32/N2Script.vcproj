@@ -199,6 +199,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\node.c"
+					>
+				</File>
+				<File
 					RelativePath="..\src\resource.c"
 					>
 				</File>
@@ -229,19 +233,15 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\expression.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\grammar.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\resource.h"
+					RelativePath="..\src\node.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\statement.h"
+					RelativePath="..\src\resource.h"
 					>
 				</File>
 				<File

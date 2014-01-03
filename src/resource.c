@@ -1,7 +1,7 @@
 /*
  *  resource.c
  *
- *    Copyright (c) 2013 skdltmxn <supershop@naver.com>
+ *    Copyright (c) 2013-2014 skdltmxn <supershop@naver.com>
  *
  *  This file manages resources used by N2Script internally
  *

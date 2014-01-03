@@ -43,7 +43,7 @@ static ui32 _size = 0;
 <COMMENT>\]\]\]           BEGIN(INITIAL);
 <INITIAL>\"               {
                               if (!init_string_buffer(BUFFER_SIZE))
-                              lerror(yyscanner, "Failed to initialize string buffer");
+                                  lerror(yyscanner, "Failed to initialize string buffer");
                         
                               BEGIN(STRING); 
                           }
@@ -122,15 +122,34 @@ static ui32 _size = 0;
                                  lerror(yyscanner, "Failed to parse string");
                          }
 <STRING>\"               {
+                             node_value v;
                              yytext[yyleng - 1] = '\0';
-                             yylval->str = register_rsrc_string(get_string_buffer()); BEGIN(INITIAL); return STR;
+                             v.sval = register_rsrc_string(get_string_buffer());
+                             *yylval = new_node(NODE_STRING, v, NULL, NULL);
+                             BEGIN(INITIAL);
+                             return T_STRING;
                          }
-if                       return IF;
-else                     return ELSE;
-[0-9]+\.[0-9]+           { yylval->real = atof(yytext); return REAL; }
-[0-9]+                   { yylval->integer = atoi(yytext); return INTEGER; }
-[a-zA-Z_][a-zA-Z0-9]*    { yylval->str = register_rsrc_string(yytext); return IDENT; }
-[+\-*/=(){}]             return yytext[0];
+"if"                     return T_IF;
+"else"                   return T_ELSE;
+[0-9]+\.[0-9]+           {
+                             node_value v;
+                             v.dval = strtod(yytext, NULL);
+                             *yylval = new_node(NODE_DOUBLE, v, NULL, NULL);
+                             return T_DOUBLE;
+                         }
+[0-9]+                   {
+                             node_value v;
+                             v.ival = strtol(yytext, NULL, 10);
+                             *yylval = new_node(NODE_INT, v, NULL, NULL);
+                             return T_INT;
+                         }
+[a-zA-Z_][a-zA-Z0-9]*    {
+                             node_value v;
+                             v.sval = register_rsrc_string(yytext);
+                             *yylval = new_node(NODE_IDENT, v, NULL, NULL);
+                             return T_IDENT;
+                         }
+[+\-*/%^&|<>=(){}]       return yytext[0];
 \n                       yylloc->first_column = yylloc->last_column = 1;
 %%
 

@@ -1,7 +1,7 @@
 /*
  *  variable.c
  *
- *    Copyright (c) 2013 skdltmxn <supershop@naver.com>
+ *    Copyright (c) 2013-2014 skdltmxn <supershop@naver.com>
  *
  *  This file manages variables used in N2Script
  *
@@ -10,9 +10,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "types.h"
-#include "ast.h"
+#include "variable.h"
 #include "eval.h"
 #include "util.h"
+
+static struct var_table *global = NULL;
+static struct var_table *current = NULL;
 
 static ui32 hash(const char *s)
 {
@@ -25,7 +28,7 @@ static ui32 hash(const char *s)
     return hash;
 }
 
-struct var_table *new_var_table(struct var_table *parent)
+static struct var_table *new_var_table(struct var_table *parent)
 {
     struct var_table *tbl = NULL;
 
@@ -51,7 +54,7 @@ struct var_table *new_var_table(struct var_table *parent)
     return tbl;
 }
 
-void destroy_var_entry(struct var_entry *entry)
+static void destroy_var_entry(struct var_entry *entry)
 {
     if (!entry)
         return;
@@ -61,15 +64,15 @@ void destroy_var_entry(struct var_entry *entry)
     safe_free(entry);
 }
 
-void destroy_var_table(struct var_table *tbl)
+static void delete_var_table(struct var_table *tbl)
 {
     int i;
 
     if (!tbl)
         return;
 
-    destroy_var_table(tbl->next);
-    destroy_var_table(tbl->child);
+    delete_var_table(tbl->next);
+    delete_var_table(tbl->child);
 
     for (i = 0; i < MAX_ENTRY; ++i)
         destroy_var_entry(tbl->entry[i]);
@@ -77,15 +80,27 @@ void destroy_var_table(struct var_table *tbl)
     safe_free(tbl);
 }
 
-struct expression *resolve_var(const struct expression *expr)
+void init_var_table()
+{
+    struct var_table *tbl = new_var_table(NULL);
+
+    global = current = tbl;
+}
+
+void destroy_var_table()
+{
+    delete_var_table(global);
+}
+
+const node *resolve_var(const node *n)
 {
     struct var_table *tbl = NULL;
     struct var_entry *entry = NULL;
     ui32 idx = 0;
 
-    idx = hash(expr->value.string) % MAX_ENTRY;
+    idx = hash(n->val.sval) % MAX_ENTRY;
 
-    tbl = expr->vtbl;
+    tbl = current;
 
     /* Loop from current scope to global */
     while (tbl)
@@ -94,7 +109,7 @@ struct expression *resolve_var(const struct expression *expr)
         if (entry)
         {
             /* Look for exact match */
-            while (entry && strcmp(entry->name, expr->value.string))
+            while (entry && strcmp(entry->name, n->val.sval))
                 entry = entry->next;
         }
 
@@ -102,12 +117,12 @@ struct expression *resolve_var(const struct expression *expr)
     }
 
     if (!entry)
-        eval_error("Failed to resolve variable `%s`\n", expr->value.string);
+        eval_error("Failed to resolve variable `%s`\n", n->val.sval);
 
-    return &entry->expr;
+    return &entry->n;
 }
 
-int assign_var(const char *ident, const struct expression *expr)
+int assign_var(const char *ident, const node *n)
 {
     struct var_table *tbl = NULL;
     struct var_entry *entry = NULL;
@@ -115,7 +130,7 @@ int assign_var(const char *ident, const struct expression *expr)
 
     idx = hash(ident) % MAX_ENTRY;
 
-    tbl = expr->vtbl;
+    tbl = current;
 
     entry = tbl->entry[idx];
 
@@ -124,7 +139,7 @@ int assign_var(const char *ident, const struct expression *expr)
     {
         if (!strcmp(entry->name, ident))
         {
-            memcpy(&entry->expr, expr, sizeof(*expr));
+            memcpy(&entry->n, n, sizeof(*n));
             break;
         }
 
@@ -139,7 +154,7 @@ int assign_var(const char *ident, const struct expression *expr)
         entry = (struct var_entry *)safe_malloc(sizeof(*entry));
 
         entry->name	= ident;
-        memcpy(&entry->expr, expr, sizeof(*expr));
+        memcpy(&entry->n, n, sizeof(*n));
         entry->next = NULL;
 
         while (*iter)

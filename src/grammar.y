@@ -12,13 +12,13 @@
 #include <stdlib.h>
 #include "types.h"
 #include "ast.h"
+#include "variable.h"
 #include "eval.h"
 #include "grammar.h"
 
 extern int yylex();
 
-void yyerror(YYLTYPE *locp, struct ast_tree *root, yyscan_t scanner, const char *s);
-static struct var_table *parent = NULL, *current = NULL;
+void yyerror(YYLTYPE *locp, node **n, yyscan_t scanner, const char *s);
 %}
 
 %code requires {
@@ -27,7 +27,9 @@ static struct var_table *parent = NULL, *current = NULL;
 #define YY_TYPEDEF_YY_SCANNER_T
 typedef void* yyscan_t;
 #endif
- 
+
+#define YYSTYPE struct _node*
+
 }
 
 %define api.pure
@@ -35,71 +37,64 @@ typedef void* yyscan_t;
 %defines
 %error-verbose
 %lex-param { yyscan_t scanner }
-%parse-param { struct ast_tree *root }
+%parse-param { node **root }
 %parse-param { yyscan_t scanner }
 
-%union {
-    struct ast_tree *root;
-    struct statement *stmt;
-    struct expression *expr;
-    int integer;
-    double real;
-    const char *str;
-}
-
-%token <integer> INTEGER
-%token <real> REAL
-%token <str> STR IDENT
-%token IF ELSE
-
-%type <root> n2script
-%type <stmt> statements statement assignment ifstmt
-%type <expr> expr
+%token T_INT "integer value (T_INT)"
+%token T_DOUBLE "double value (T_DOUBLE)"
+%token T_STRING "string value (T_STRING)"
+%token T_IDENT "identifier (T_IDENT)"
+%token T_IF "if (T_IF)"
+%token T_ELSE "else (T_ELSE)"
+%token END 0 "end of file"
 
 %right '='
+
+%left '|'
+%left '^'
+%left '&'
 %left '+' '-'
 %left '*' '/'
 %%
 
 n2script:   /* empty */
-            | { current = root->var_tbl; } statements { root->stmts = $2; }
+            | { printf("root: %p\n", *root); } statements         { *root = $2; }
             ;
-            
-statements: statements statement { add_statement($1, $2); }
-            | statement          { $$ = $1; }
+
+statements: statement            { $$ = $1; }
+            | statements statement { link_node($1, $2); }
             ;
-            
+
 statement:  '{' statements '}'   { $$ = $2; }
-            | assignment         { $$ = $1; }
             | ifstmt			 { $$ = $1; }
+            | expr               { $$ = $1; }
             ;
-            
-assignment: IDENT '=' expr       { $$ = new_statement(eval_assign, destroy_assign_stmt); 
-                                   $$->assign = new_assign_stmt($1, $3); }     
+
+ifstmt:     T_IF '(' expr ')' statement
+                                 {}
+            | T_IF '(' expr ')' statement T_ELSE statement
+                                 {}
             ;
-            
-ifstmt:     IF '(' expr ')' statement 
-                                 { $$ = new_statement(eval_if, destroy_if_stmt);
-                                   $$->ifstmt = new_if_stmt($3, $5, NULL); }
-            | IF '(' expr ')' statement ELSE statement
-                                 { $$ = new_statement(eval_if, destroy_if_stmt);
-                                   $$->ifstmt = new_if_stmt($3, $5, $7); }
-            ;
-            
-expr:       expr '+' expr        { $$ = new_operation(EXP_ADD, $1, $3); }
-            | expr '-' expr      { $$ = new_operation(EXP_SUB, $1, $3); }
-            | expr '*' expr      { $$ = new_operation(EXP_MUL, $1, $3); }
-            | expr '/' expr      { $$ = new_operation(EXP_DIV, $1, $3); }
+
+expr:       expr '+' expr        { $$ = new_operation(NODE_ADD, $1, $3); }
+            | expr '-' expr      { $$ = new_operation(NODE_SUB, $1, $3); }
+            | expr '*' expr      { $$ = new_operation(NODE_MUL, $1, $3); }
+            | expr '/' expr      { $$ = new_operation(NODE_DIV, $1, $3); }
+            | expr '&' expr      { $$ = new_operation(NODE_AND_BIN, $1, $3); }
+            | expr '^' expr      { $$ = new_operation(NODE_XOR, $1, $3); }
+            | expr '|' expr      { $$ = new_operation(NODE_OR_BIN, $1, $3); }
+            | T_IDENT '=' expr   { $$ = new_assign($1, $3); }
             | '(' expr ')'       { $$ = $2; }
-            | INTEGER            { union exp_value v; v.integer = $1; $$ = new_expression(EXP_INTEGER, &v, current); }
-            | REAL               { union exp_value v; v.real = $1; $$ = new_expression(EXP_REAL, &v, current); }
-            | STR                { union exp_value v; v.string = $1; $$ = new_expression(EXP_STRING, &v, current); }
-            | IDENT              { union exp_value v; v.string = $1; $$ = new_expression(EXP_IDENT, &v, current); }
+            | T_INT              { $$ = $1; }
+            | T_DOUBLE           { $$ = $1; }
+            | T_STRING           { $$ = $1; }
+            | T_IDENT            { $$ = $1; }
             ;
 
 %%
 
-void yyerror(YYLTYPE *locp, struct ast_tree *root, yyscan_t scanner, const char *s)
+void yyerror(YYLTYPE *locp, node **n, yyscan_t scanner, const char *s)
 {
-    parse_error(root, s);
+	printf("node: %p\n", *n);
+    parse_error(*n, s);
 }
