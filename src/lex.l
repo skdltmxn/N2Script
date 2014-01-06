@@ -10,6 +10,7 @@
 %{
 #include "types.h"
 #include "ast.h"
+#include "eval.h"
 #include "grammar.h"
 #include "util.h"
 #include "resource.h"
@@ -125,7 +126,7 @@ static ui32 _size = 0;
                              node_value v;
                              yytext[yyleng - 1] = '\0';
                              v.sval = register_rsrc_string(get_string_buffer());
-                             *yylval = new_node(NODE_STRING, v, NULL, NULL);
+                             *yylval = new_node(NODE_STRING, v, eval_refer, NULL);
                              BEGIN(INITIAL);
                              return T_STRING;
                          }
@@ -134,19 +135,19 @@ static ui32 _size = 0;
 [0-9]+\.[0-9]+           {
                              node_value v;
                              v.dval = strtod(yytext, NULL);
-                             *yylval = new_node(NODE_DOUBLE, v, NULL, NULL);
+                             *yylval = new_node(NODE_DOUBLE, v, eval_refer, NULL);
                              return T_DOUBLE;
                          }
 [0-9]+                   {
                              node_value v;
                              v.ival = strtol(yytext, NULL, 10);
-                             *yylval = new_node(NODE_INT, v, NULL, NULL);
+                             *yylval = new_node(NODE_INT, v, eval_refer, NULL);
                              return T_INT;
                          }
 [a-zA-Z_][a-zA-Z0-9]*    {
                              node_value v;
                              v.sval = register_rsrc_string(yytext);
-                             *yylval = new_node(NODE_IDENT, v, NULL, NULL);
+                             *yylval = new_node(NODE_IDENT, v, eval_refer, NULL);
                              return T_IDENT;
                          }
 [+\-*/%^&|<>=(){}]       return yytext[0];

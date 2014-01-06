@@ -38,13 +38,13 @@ typedef struct _node
 {
     struct _node *next;
     struct _node **child;
-    int (* handler)(const struct _node *);
+    int (* handler)(const struct _node *, struct _node *);
     void (* dtor)(struct _node *);
     node_type type;
     node_value val;
 } node;
 
-typedef int (* node_handler)(const node *);
+typedef int (* node_handler)(const node *, node *);
 typedef void (* node_dtor)(node *);
 
 /*  */
@@ -60,6 +60,5 @@ extern node *new_node(node_type type,
                       node_dtor dtor);
 extern void link_node(node *before, node *after);
 extern void destroy_node(node *n);
-extern node_value node_dummy_value();
 
 #endif

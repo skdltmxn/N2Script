@@ -147,9 +147,6 @@ int encode_utf8(byte *utf8, const ui16 unicode)
         *(utf8 + 2) = 0x80 | (unicode & 0x3f);
         return 3;
     }
-
-    /* impossible */
-    return 0;
 }
 
 /* Linked list for testing */

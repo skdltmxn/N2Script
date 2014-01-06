@@ -64,7 +64,8 @@ const byte *register_rsrc_string(const byte *s)
     byte *new_string = NULL;
 
     /* First check if there is existing string */
-    if ((rsrc = (struct rsrc *)search_rsrc(RSRC_STRING, id)))
+    rsrc = (struct rsrc *)search_rsrc(RSRC_STRING, id);
+    if (rsrc)
         return (byte *)rsrc->data;
 
     rsrc = (struct rsrc *)safe_malloc(sizeof(struct rsrc));

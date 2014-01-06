@@ -24,7 +24,7 @@ void destroy_assign(node *n)
 
 node *new_assign(node *lhs, node *rhs)
 {
-    node *n = new_node(NODE_ASSIGN, node_dummy_value(), eval_assign, destroy_assign);
+    node *n = new_node(NODE_ASSIGN, lhs->val, eval_assign, destroy_assign);
 
     n->child = (node **)safe_malloc(sizeof(n) * 2);
     NODE_LHS(n) = lhs;
@@ -33,7 +33,7 @@ node *new_assign(node *lhs, node *rhs)
     return n;
 }
 
-void destroy_operation(node *n)
+void destroy_binop(node *n)
 {
     if (n->child)
     {
@@ -47,7 +47,7 @@ node *new_operation(const node_type type, node *left, node *right)
     node *n = NULL;
     int check = TYPE_CHECK_OK;
 
-    n = new_node(type, node_dummy_value(), NULL, destroy_operation);
+    n = new_node(type, left->val, eval_binop, destroy_binop);
 
     check = type_check(type, left, right);
 
@@ -81,6 +81,10 @@ node *new_operation(const node_type type, node *left, node *right)
     {
         div_expression(left, right, n);
     }
+
+    /* ugly... */
+    n->handler = eval_refer;
+    n->dtor = NULL;
 
     destroy_node(left);
     destroy_node(right);

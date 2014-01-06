@@ -17,8 +17,10 @@ extern int add_expression(const node *left, const node *right, node *result);
 extern int sub_expression(const node *left, const node *right, node *result);
 extern int mul_expression(const node *left, const node *right, node *result);
 extern int div_expression(const node *left, const node *right, node *result);
-extern int eval_assign(const node *n);
-extern int eval_if(const node *n);
+extern int eval_binop(const node *self, node *result);
+extern int eval_refer(const node *, node *);
+extern int eval_assign(const node *, node *);
+extern int eval_if(const node *, node *);
 extern int type_check(const node_type type, const node *left, const node *right);
 extern void eval_error(const char *s, ...);
 

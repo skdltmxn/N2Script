@@ -58,7 +58,7 @@ typedef void* yyscan_t;
 %%
 
 n2script:   /* empty */
-            | { printf("root: %p\n", *root); } statements         { *root = $2; }
+            | statements         { *root = $1; }
             ;
 
 statements: statement            { $$ = $1; }
@@ -95,6 +95,5 @@ expr:       expr '+' expr        { $$ = new_operation(NODE_ADD, $1, $3); }
 
 void yyerror(YYLTYPE *locp, node **n, yyscan_t scanner, const char *s)
 {
-	printf("node: %p\n", *n);
     parse_error(*n, s);
 }

@@ -26,7 +26,7 @@ node *new_node(node_type type,
     n->handler = handler;
     n->dtor = dtor;
 
-    printf("node made %p\n", n);
+    /*printf("node made %p\n", n);*/
 
     return n;
 }
@@ -52,14 +52,7 @@ void destroy_node(node *n)
     if (n->dtor)
         n->dtor(n);
 
-    printf("node destroyed %p %d\n", n, n->type);
+    /*printf("node destroyed %p %d\n", n, n->type);*/
     safe_free(n->child);
     safe_free(n);
-}
-
-inline node_value node_dummy_value()
-{
-    node_value v;
-    v.ival = 0;
-    return v;
 }

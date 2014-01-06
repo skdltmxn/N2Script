@@ -15,7 +15,7 @@
 struct var_entry
 {
     struct var_entry *next;
-    const char *name;
+    const byte *name;
     node n;
 };
 
@@ -28,6 +28,6 @@ struct var_table
 extern void init_var_table();
 extern void destroy_var_table();
 extern const node *resolve_var(const node *n);
-extern int assign_var(const char *ident, const node *n);
+extern int assign_var(const byte *ident, const node *n);
 
 #endif

@@ -17,12 +17,12 @@
 static struct var_table *global = NULL;
 static struct var_table *current = NULL;
 
-static ui32 hash(const char *s)
+static ui32 hash(const byte *s)
 {
     ui32 hash = 0xB40BBE37;
     size_t i;
 
-    for (i = 0; i < strlen(s); ++i)
+    for (i = 0; i < strlen((const char *)s); ++i)
         hash ^= (hash << 4) ^ s[i];
 
     return hash;
@@ -122,7 +122,7 @@ const node *resolve_var(const node *n)
     return &entry->n;
 }
 
-int assign_var(const char *ident, const node *n)
+int assign_var(const byte *ident, const node *n)
 {
     struct var_table *tbl = NULL;
     struct var_entry *entry = NULL;

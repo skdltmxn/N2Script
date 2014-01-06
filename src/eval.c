@@ -27,7 +27,7 @@ int evaluate(node *nodes)
 
     while (n)
     {
-        if (n->handler && !n->handler(n))
+        if (n->handler && !n->handler(n, NULL))
             return 0;
 
         n = n->next;
@@ -257,129 +257,127 @@ static int to_boolean(const node *n)
     }
 }
 
-static node *eval_expression(node *n, node *result)
+/* Evaluate binary operations  */
+int eval_binop(const node *self, node *result)
 {
-    node *left = NULL;
-    node *right = NULL;
-    node save;
+    node left;
+    node *right = result; /* result works as both rhs and final result */
 
-    switch (n->type)
+    /* Called from main flow, do nothing */
+    if (!result)
+        return 1;
+
+    /* Evaluate lhs */
+    if (!NODE_LEFT(self)->handler(NODE_LEFT(self), &left))
+        return 0;
+
+    /* Evaluate rhs */
+    if (!NODE_RIGHT(self)->handler(NODE_RIGHT(self), right))
+        return 0;
+
+    /* Check type match */
+    if (type_check(self->type, &left, right) == TYPE_CHECK_ERROR)
+        return 0;
+
+    switch (self->type)
     {
     case NODE_ADD:
-        left = eval_expression(NODE_LEFT(n), result);
-        memcpy(&save, left, sizeof(save));
-        right = eval_expression(NODE_RIGHT(n), result);
-
-        if (!left || !right)
-            break;
-
-        if (type_check(n->type, left, right) == TYPE_CHECK_ERROR)
-            break;
-
-        if (add_expression(&save, right, result))
-            return result;
+        if (add_expression(&left, right, result))
+            return 1;
 
         break;
 
     case NODE_SUB:
-        left = eval_expression(NODE_LEFT(n), result);
-        memcpy(&save, left, sizeof(save));
-        right = eval_expression(NODE_RIGHT(n), result);
-
-        if (!left || !right)
-            break;
-
-        if (type_check(n->type, left, right) == TYPE_CHECK_ERROR)
-            break;
-
-        if (sub_expression(&save, right, result))
-            return result;
+        if (sub_expression(&left, right, result))
+            return 1;
 
         break;
 
     case NODE_MUL:
-        left = eval_expression(NODE_LEFT(n), result);
-        memcpy(&save, left, sizeof(save));
-        right = eval_expression(NODE_RIGHT(n), result);
-
-        if (!left || !right)
-            break;
-
-        if (type_check(n->type, left, right) == TYPE_CHECK_ERROR)
-            break;
-
-        if (mul_expression(&save, right, result))
-            return result;
+        if (mul_expression(&left, right, result))
+            return 1;
 
         break;
 
     case NODE_DIV:
-        left = eval_expression(NODE_LEFT(n), result);
-        memcpy(&save, left, sizeof(save));
-        right = eval_expression(NODE_RIGHT(n), result);
-
-        if (!left || !right)
-            break;
-
-        if (type_check(n->type, left, right) == TYPE_CHECK_ERROR)
-            break;
-
-        if (div_expression(&save, right, result))
-            return result;
+        if (div_expression(&left, right, result))
+            return 1;
 
         break;
 
-    case NODE_INT:
-        result->val.ival = n->val.ival;
-        result->type = n->type;
-        return n;
-
-    case NODE_DOUBLE:
-        result->val.dval = n->val.dval;
-        result->type = n->type;
-        return n;
-
-    case NODE_STRING:
-        result->val.sval = n->val.sval;
-        result->type = n->type;
-        return n;
-
-    case NODE_IDENT:
-        memcpy(result, resolve_var(n), sizeof(node));
-        return result;
+    default:
+        break;
     }
 
-    return NULL;
+    return 0;
 }
 
-int eval_assign(const node *n)
+/* Evaluate reading values */
+int eval_refer(const node *self, node *result)
 {
-    node result;
+    /* Called from main flow, do nothing */
+    if (!result)
+        return 1;
 
-    if (!eval_expression(NODE_RHS(n), &result))
+    switch (self->type)
+    {
+        case NODE_INT:
+            result->val.ival = self->val.ival;
+            result->type = self->type;
+            return 1;
+
+        case NODE_DOUBLE:
+            result->val.dval = self->val.dval;
+            result->type = self->type;
+            return 1;
+
+        case NODE_STRING:
+            result->val.sval = self->val.sval;
+            result->type = self->type;
+            return 1;
+
+        case NODE_IDENT:
+            memcpy(result, resolve_var(self), sizeof(*self));
+            return 1;
+
+        default:
+            break;
+    }
+
+    return 0;
+}
+
+int eval_assign(const node *self, node *result)
+{
+    node rhs;
+
+    if (!NODE_RHS(self)->handler(NODE_RHS(self), &rhs))
         return 0;
 
-    if (!assign_var(NODE_LHS(n)->val.sval, &result))
-        eval_error("Fatal: failed to assign `%s`\n", NODE_LHS(n)->val.sval);
+    if (!assign_var(NODE_LHS(self)->val.sval, &rhs))
+        eval_error("Fatal: failed to assign `%s`\n", NODE_LHS(self)->val.sval);
 
-    if (result.type == NODE_INT)
-        printf("%s <- %d\n", NODE_LHS(n)->val.sval, result.val.ival);
-    else if (result.type == NODE_DOUBLE)
-        printf("%s <- %f\n", NODE_LHS(n)->val.sval, result.val.dval);
-    else if (result.type == NODE_STRING)
-        printf("%s <- %s\n", NODE_LHS(n)->val.sval, result.val.sval);
+    if (rhs.type == NODE_INT)
+        printf("%s <- %d\n", NODE_LHS(self)->val.sval, rhs.val.ival);
+    else if (rhs.type == NODE_DOUBLE)
+        printf("%s <- %f\n", NODE_LHS(self)->val.sval, rhs.val.dval);
+    else if (rhs.type == NODE_STRING)
+        printf("%s <- %s\n", NODE_LHS(self)->val.sval, rhs.val.sval);
+
+    if (result)
+        memcpy(result, &rhs, sizeof(rhs));
 
     return 1;
 }
 
-int eval_if(const node *n)
+int eval_if(const node *n, node *result)
 {
-    node result;
+    node cond;
 
-    if (!eval_expression(n->child[0], &result))
+    /* if (!eval_expression(n->child[0], &cond)) */
         return 0;
 
-    if (to_boolean(&result))
+    if (to_boolean(&cond))
         evaluate(n->child[1]);
     else
         evaluate(n->child[2]);
